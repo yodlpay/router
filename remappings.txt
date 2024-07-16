@@ -1,0 +1,16 @@
+@chainlink/contracts/=lib/foundry-chainlink-toolkit/lib/chainlink-brownie-contracts/contracts/src/
+@openzeppelin/=lib/foundry-chainlink-toolkit/lib/openzeppelin-contracts/
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+chainlink-brownie-contracts/=lib/foundry-chainlink-toolkit/lib/chainlink-brownie-contracts/contracts/src/v0.6/vendor/@arbitrum/nitro-contracts/src/
+chainlink/=lib/chainlink/contracts/
+ds-test/=lib/foundry-chainlink-toolkit/lib/forge-std/lib/ds-test/src/
+erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/
+forge-std/=lib/forge-std/src/
+foundry-chainlink-toolkit/=lib/foundry-chainlink-toolkit/
+openzeppelin-contracts/=lib/openzeppelin-contracts/
+swap-router-contracts/=lib/swap-router-contracts/contracts/
+@uniswap/swap-router-contracts/=lib/swap-router-contracts/contracts/
+v3-periphery/=lib/v3-periphery/contracts/
+@uniswap/v3-periphery/=lib/v3-periphery/
+v3-core/=lib/v3-core/
+@uniswap/v3-core/=lib/v3-core/
