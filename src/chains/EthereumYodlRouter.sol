@@ -11,12 +11,12 @@ contract YodlRouter is YodlTransferRouter, YodlCurveRouter, YodlUniswapRouter {
     constructor()
         AbstractYodlRouter()
         YodlTransferRouter()
-        YodlCurveRouter(0x2a426b3Bb4fa87488387545f15D01d81352732F9)
+        YodlCurveRouter(0x99a58482BD75cbab83b27EC03CA68fF489b5788f)
         YodlUniswapRouter(0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45)
     {
         version = "vSam";
         yodlFeeBps = 20;
-        yodlFeeTreasury = 0x5f0947253a8218894af13438ac2e2E0CeD30d234;
-        wrappedNativeToken = IWETH9(0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270);
+        yodlFeeTreasury = 0x9C48d180e4eEE0dA2A899EE1E4c533cA5e92db77;
+        wrappedNativeToken = IWETH9(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     }
 }

@@ -2,20 +2,18 @@
 
 pragma solidity ^0.8.26;
 
-import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import "../lib/chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import "../lib/v3-periphery/contracts/interfaces/external/IWETH9.sol";
 import "../lib/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-abstract contract AbstractYodlRouter is Ownable {
-
+abstract contract AbstractYodlRouter {
     string public version;
-    address public feeTreasury;
-    uint256 public baseFeeBps;
+    address public yodlFeeTreasury;
+    uint256 public yodlFeeBps;
     IWETH9 public wrappedNativeToken;
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint256 public constant MAX_FEE_BPS = 5_000; // 50%
+    uint256 public constant MAX_EXTRA_FEE_BPS = 5_000; // 50%
 
     /// @notice Emitted when a payment goes through
     /// @param sender The address who has made the payment
@@ -26,37 +24,21 @@ abstract contract AbstractYodlRouter is Ownable {
     /// @param fees The fees taken by the Yodl router from the amount paid
     /// @param memo The message attached to the payment
     event Yodl(
-        address indexed sender,
-        address indexed receiver,
-        address token /* the token that payee receives, use address(0) for AVAX*/,
-        uint256 amount,
-        uint256 fees,
-        bytes32 memo
+        address indexed sender, address indexed receiver, address token, uint256 amount, uint256 fees, bytes32 memo
     );
 
     /// @notice Emitted when a native token transfer occurs
     /// @param sender The address who has made the payment
     /// @param receiver The address who has received the payment
     /// @param amount The amount paid by the sender in terms of the native token
-    event YodlNativeTokenTransfer(
-        address indexed sender,
-        address indexed receiver,
-        uint256 indexed amount
-    );
+    event YodlNativeTokenTransfer(address indexed sender, address indexed receiver, uint256 indexed amount);
 
     /// @notice Emitted when a conversion has occurred from one currency to another using a Chainlink price feed
     /// @param priceFeed0 The address of the price feed used for conversion
     /// @param priceFeed1 The address of the price feed used for conversion
     /// @param exchangeRate0 The rate used from the price feed at the time of conversion
     /// @param exchangeRate1 The rate used from the price feed at the time of conversion
-    event Convert(
-        address indexed priceFeed0,
-        address indexed priceFeed1,
-        int256 exchangeRate0,
-        int256 exchangeRate1
-    );
-
-    constructor() Ownable(msg.sender) {}
+    event Convert(address indexed priceFeed0, address indexed priceFeed1, int256 exchangeRate0, int256 exchangeRate1);
 
     /// @notice Enables the contract to receive Ether
     /// @dev We need a receive method for when we withdraw WETH to the router. It does not need to do anything.
@@ -83,22 +65,12 @@ abstract contract AbstractYodlRouter is Ownable {
      * @return priceFeedsUsed The price feeds in the order they were used
      * @return prices The exchange rates from the price feeds
      */
-    function exchangeRate(
-        address[2] calldata priceFeeds,
-        uint256 amount
-    )
-    public
-    view
-    returns (
-        uint256 converted,
-        address[2] memory priceFeedsUsed,
-        int256[2] memory prices
-    )
+    function exchangeRate(address[2] calldata priceFeeds, uint256 amount)
+        public
+        view
+        returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
     {
-        require(
-            priceFeeds[0] != address(0) || priceFeeds[1] != address(0),
-            "invalid pricefeeds"
-        );
+        require(priceFeeds[0] != address(0) || priceFeeds[1] != address(0), "invalid pricefeeds");
 
         bool shouldInverse;
 
@@ -121,7 +93,7 @@ abstract contract AbstractYodlRouter is Ownable {
 
         // Calculate the converted value using price feeds
         uint256 decimals = uint256(10 ** uint256(priceFeedOne.decimals()));
-        (, int256 price, , ,) = priceFeedOne.latestRoundData();
+        (, int256 price,,,) = priceFeedOne.latestRoundData();
         prices[0] = price;
         if (shouldInverse) {
             converted = (amount * decimals) / uint256(price);
@@ -137,11 +109,7 @@ abstract contract AbstractYodlRouter is Ownable {
             converted = (converted * decimals) / uint256(price);
         }
 
-        return (
-            converted,
-            [address(priceFeedOne), address(priceFeedTwo)],
-            prices
-        );
+        return (converted, [address(priceFeedOne), address(priceFeedTwo)], prices);
     }
 
     /// @notice Helper function to calculate fees
@@ -153,11 +121,21 @@ abstract contract AbstractYodlRouter is Ownable {
     /// @param amount The amount to calculate the fee for
     /// @param feeBps The size of the fee in terms of basis points
     /// @return The fee
-    function calculateFee(
-        uint256 amount,
-        uint256 feeBps
-    ) public pure returns (uint256) {
+    function calculateFee(uint256 amount, uint256 feeBps) public pure returns (uint256) {
         return (amount * feeBps) / 10_000;
+    }
+
+    /// @notice Transfers all fees or slippage collected by the router to the treasury address
+    /// @param token The address of the token we want to transfer from the router
+    function sweep(address token) external {
+        if (token == NATIVE_TOKEN) {
+            // transfer native token out of contract
+            (bool success,) = yodlFeeTreasury.call{value: address(this).balance}("");
+            require(success, "transfer failed in sweep");
+        } else {
+            // transfer ERC20 contract
+            TransferHelper.safeTransfer(token, yodlFeeTreasury, IERC20(token).balanceOf(address(this)));
+        }
     }
 
     /// @notice Calculates and transfers fee directly from an address to another
@@ -169,13 +147,10 @@ abstract contract AbstractYodlRouter is Ownable {
     /// @param from The address from which we are transferring the fee
     /// @param to The address to which the fee will be sent
     /// @return The fee sent
-    function transferFee(
-        uint256 amount,
-        uint256 feeBps,
-        address token,
-        address from,
-        address to
-    ) public returns (uint256) {
+    function transferFee(uint256 amount, uint256 feeBps, address token, address from, address to)
+        public
+        returns (uint256)
+    {
         uint256 fee = calculateFee(amount, feeBps);
         if (fee > 0) {
             if (token != NATIVE_TOKEN) {
@@ -187,10 +162,7 @@ abstract contract AbstractYodlRouter is Ownable {
                     TransferHelper.safeTransferFrom(token, from, to, fee);
                 }
             } else {
-                require(
-                    from == address(this),
-                    "can only transfer eth from the router address"
-                );
+                require(from == address(this), "can only transfer eth from the router address");
 
                 // Native ether
                 (bool success,) = to.call{value: fee}("");
