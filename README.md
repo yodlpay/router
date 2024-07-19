@@ -59,12 +59,12 @@ If the sender is sanctioned, the transaction is reverted with the message "sende
 Deployment to various networks is automated using the script [deploy_ofac.sh](./deploy_scripts/deploy_ofac.sh).
 
 ### Current deployments
-- [Ethereum](https://etherscan.io/address/0x589fce694575064b5637310804587338037d1de9)
-- [Gnosis](https://gnosisscan.io/address/0x29f8452bc8db7b4ecd5de3336b50dd20df97f0be)
-- [Polygon](https://polygonscan.com/address/0x044e95b4d1d429343077c97cd2f4b77b8282471c)
-- [Optimism](https://optimistic.etherscan.io/address/0x7a8f9b360464f6ab44de547d095e27e49fe6c3dc)
-- [Arbitrum One](https://arbiscan.io/address/0xda098d882d85547f613f976866a449a7c2778761)
-- [Base](https://basescan.org/address/0xaff3eda8992cc7a20b29c3835e59099e79aa98c2)
+- [Ethereum](https://etherscan.io/address/0x627a23113d5d4b2731002d71a6330802374d71d9)
+- [Gnosis](https://gnosisscan.io/address/0x688ff86eea652db4f248fcc80378abe1655cbd0a)
+- [Polygon](https://polygonscan.com/address/0xa0b2fb0a20853d4d9ae25377ee4adecca35a9b0d)
+- [Optimism](https://optimistic.etherscan.io/address/0xda098d882d85547f613f976866a449a7c2778761)
+- [Arbitrum One](https://arbiscan.io/address/0x589fce694575064b5637310804587338037d1de9)
+- [Base](https://basescan.org/address/0x1659b18083b6600c16539883e02634fa86dffda4)
 
 ## License
 The YodlRouter is released under the [BSL-1.1 License](https://mariadb.com/bsl-faq-adopting/#whatis).
