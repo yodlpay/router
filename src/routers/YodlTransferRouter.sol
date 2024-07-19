@@ -123,7 +123,7 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
                     params.receiver,
                     receivedAmount,
                     params.token,
-                    params.yAppList[i].yd,
+                    params.yAppList[i].sessionId,
                     params.yAppList[i].payload
                 );
             }

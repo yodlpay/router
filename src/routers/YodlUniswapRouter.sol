@@ -64,7 +64,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
                     params.receiver,
                     amountOutExpected,
                     tokenOut,
-                    params.yAppList[i].yd,
+                    params.yAppList[i].sessionId,
                     params.yAppList[i].payload
                 );
             }

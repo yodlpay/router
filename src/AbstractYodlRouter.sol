@@ -48,7 +48,7 @@ abstract contract AbstractYodlRouter {
      */
     struct YApp {
         address yApp;
-        uint256 yd;
+        uint256 sessionId;
         bytes[] payload;
     }
 
