@@ -5,6 +5,7 @@ pragma solidity ^0.8.26;
 
 import "../AbstractYodlRouter.sol";
 import "../../lib/swap-router-contracts/contracts/interfaces/ISwapRouter02.sol";
+import "../interfaces/IBeforeHook.sol";
 
 abstract contract YodlUniswapRouter is AbstractYodlRouter {
     ISwapRouter02 public uniswapRouter;
@@ -27,6 +28,8 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
         uint256 extraFeeBps;
         SwapType swapType;
         uint256 yd;
+        // List of YApps that are allowed to be called with IBeforeHook.beforeHook extension
+        address[] yAppList;
     }
 
     constructor(address _uniswapRouter) {
@@ -53,6 +56,13 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
             emit Convert(priceFeeds[0], priceFeeds[1], prices[0], prices[1]);
         } else {
             amountOutExpected = params.amountOut;
+        }
+        if (params.yAppList.length > 0) {
+            for (uint256 i = 0; i < params.yAppList.length; i++) {
+                IBeforeHook(params.yAppList[i]).beforeHook(
+                    msg.sender, params.receiver, amountOutExpected, tokenOut, params.memo
+                );
+            }
         }
 
         // There should be no other situation in which we send a transaction with native token
