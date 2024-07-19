@@ -7,7 +7,11 @@ import "../routers/YodlTransferRouter.sol";
 import "../routers/YodlCurveRouter.sol";
 
 contract YodlRouter is YodlTransferRouter, YodlCurveRouter {
-    constructor() AbstractYodlRouter() YodlTransferRouter() YodlCurveRouter(0xE6358f6a45B502477e83CC1CDa759f540E4459ee) {
+    constructor()
+        AbstractYodlRouter()
+        YodlTransferRouter()
+        YodlCurveRouter(0xE6358f6a45B502477e83CC1CDa759f540E4459ee)
+    {
         version = "vSam";
         yodlFeeBps = 20;
         yodlFeeTreasury = 0x775aaf73a50C25eEBd308BBb9C34C73D081B423b;

@@ -34,38 +34,37 @@ with the option of performing token swaps via Curve or Uniswap to settle the pay
     - Initializes the necessary router contracts for regular, Curve, and Uniswap payments.
 
 ### Deployment
+Deployment to various networks is automated using the script [deploy_router.sh](./deploy_scripts/deploy_router.sh).
 
-Deployment to various networks is automated using the following scripts:
+## yApps - Decentralized Extensions to the YodlRouter
 
-### Deploy to Base and verify contract sources
-```bash
-forge create --rpc-url https://mainnet.base.org --verify --verifier-url https://api.basescan.org/api --interactive --etherscan-api-key 3VKX8G4B2D6SXFCBFZJT6HSZ138JXQZ4IN --chain 8453 src/chains/BaseYodlRouter.sol:YodlRouter
-```
+### Overview
+yApps are decentralized extensions integrated into the YodlRouter ecosystem to add an extra layer of logic before executing any operations. These extensions are designed to run a pre-check using the beforeHook method to ensure compliance with external rules or conditions before proceeding with the regular transaction flow. If the conditions are not met, the hook will revert, preventing the operation from executing.
 
-### Deploy to Polygon and verify contract sources
-```bash
-forge create --rpc-url https://polygon-rpc.com --verify --verifier-url https://api.polygonscan.com/api --interactive --etherscan-api-key K943G66H5F95GDXCA2W9YY882H5XR85FI7 --chain 137 src/chains/PolygonYodlRouter.sol:YodlRouter
-```
+### Chainalysis Sanctioned OFAC List Extension
+One practical example of a yApp is the Chainalysis Sanctioned OFAC List Extension. This extension leverages the Chainalysis Oracle to check if the sender of a transaction is on the sanctioned list maintained by the Office of Foreign Assets Control (OFAC). The beforeHook method in this extension ensures that transactions initiated by sanctioned addresses are blocked, enhancing compliance with global sanctions regulations.
 
-### Deploy to Ethereum and verify contract sources
-```bash
-forge create --rpc-url https://ethereum-rpc.publicnode.com --verify --interactive --etherscan-api-key M6Y54YF9QH6KBEYHKPQGTKU47QCPT5JGM2 --chain 1 src/chains/EthereumYodlRouter.sol:YodlRouter
-```
+#### How It Works
+##### Integration with YodlRouter:
 
-### Deploy to Gnosis and verify contract sources
-```bash
-forge create --rpc-url https://rpc.gnosischain.com --verify --verifier-url https://api.gnosisscan.io/api --interactive --etherscan-api-key Z7ADQP2JRDII511CJUD4YDRXEUS12QUNKD --chain 100 src/chains/GnosisYodlRouter.sol:YodlRouter
-```
+* The beforeHook method is integrated into the yodlWithToken, yodlWithUniswap, and yodlWithCurve functions of the YodlRouter.
+Before any operation within these functions, the beforeHook method of the yApp is called.
+Chainalysis Sanctioned OFAC List Extension Logic:
 
-### Deploy to Optimism and verify contract sources
-```bash
-forge create --rpc-url https://mainnet.optimism.io --verify --verifier-url https://api-optimistic.etherscan.io/api --interactive --etherscan-api-key 93ITRJAAFTSIUHVSGTXZ6KI5X6JN2C2ISZ --chain 10 src/chains/OptimismYodlRouter.sol:YodlRouter
-```
+* The extension contract, ChainalysisOfacExtension, implements the IBeforeHook interface.
+It uses the Chainalysis Oracle to check if the sender's address is sanctioned.
+If the sender is sanctioned, the transaction is reverted with the message "sender is sanctioned".
 
-### Deploy to Arbitrum One and verify contract sources
-```bash
-forge create --rpc-url https://arb1.arbitrum.io/rpc --verify --verifier-url https://api.arbiscan.io/api --interactive --etherscan-api-key U516IXEMJA8QJPB8KPKYUB9RKBR88MMH31 --chain 42161 src/chains/ArbitrumOneYodlRouter.sol:YodlRouter
-```
+### Deployment
+Deployment to various networks is automated using the script [deploy_ofac.sh](./deploy_scripts/deploy_ofac.sh).
+
+### Current deployments
+- [Ethereum](https://etherscan.io/address/0x627a23113d5d4b2731002d71a6330802374d71d9)
+- [Gnosis](https://gnosisscan.io/address/0x688ff86eea652db4f248fcc80378abe1655cbd0a)
+- [Polygon](https://polygonscan.com/address/0xa0b2fb0a20853d4d9ae25377ee4adecca35a9b0d)
+- [Optimism](https://optimistic.etherscan.io/address/0xda098d882d85547f613f976866a449a7c2778761)
+- [Arbitrum One](https://arbiscan.io/address/0x589fce694575064b5637310804587338037d1de9)
+- [Base](https://basescan.org/address/0x1659b18083b6600c16539883e02634fa86dffda4)
 
 ## License
 The YodlRouter is released under the [BSL-1.1 License](https://mariadb.com/bsl-faq-adopting/#whatis).

@@ -5,6 +5,7 @@ pragma solidity ^0.8.26;
 
 import "../interfaces/ICurveRouter.sol";
 import "../AbstractYodlRouter.sol";
+import "../interfaces/IBeforeHook.sol";
 
 abstract contract YodlCurveRouter is AbstractYodlRouter {
     ICurveRouter private curveRouter;
@@ -26,6 +27,8 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         address extraFeeReceiver;
         uint256 extraFeeBps;
         uint256 yd;
+        // List of YApps that are allowed to be called with IBeforeHook.beforeHook extension
+        YApp[] yAppList;
     }
 
     constructor(address _curveRouter) {
@@ -51,6 +54,18 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
             emit Convert(priceFeeds[0], priceFeeds[1], prices[0], prices[1]);
         } else {
             amountOutExpected = params.amountOut;
+        }
+        if (params.yAppList.length > 0) {
+            for (uint256 i = 0; i < params.yAppList.length; i++) {
+                IBeforeHook(params.yAppList[i].yApp).beforeHook(
+                    msg.sender,
+                    params.receiver,
+                    amountOutExpected,
+                    tokenOut,
+                    params.yAppList[i].sessionId,
+                    params.yAppList[i].payload
+                );
+            }
         }
 
         // There should be no other situation in which we send a transaction with native token

@@ -4,6 +4,7 @@
 pragma solidity ^0.8.26;
 
 import "../AbstractYodlRouter.sol";
+import "../interfaces/IBeforeHook.sol";
 
 abstract contract YodlTransferRouter is AbstractYodlRouter {
     struct YodlTransferParams {
@@ -23,6 +24,8 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         uint256 extraFeeBps;
         // Metadata tracker for the payment
         uint256 yd;
+        // List of YApps that are allowed to be called with IBeforeHook.beforeHook extension
+        YApp[] yAppList;
     }
 
     /**
@@ -112,19 +115,33 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
             );
         }
 
+        uint256 receivedAmount = finalAmount - totalFee;
+        if (params.yAppList.length > 0) {
+            for (uint256 i = 0; i < params.yAppList.length; i++) {
+                IBeforeHook(params.yAppList[i].yApp).beforeHook(
+                    msg.sender,
+                    params.receiver,
+                    receivedAmount,
+                    params.token,
+                    params.yAppList[i].sessionId,
+                    params.yAppList[i].payload
+                );
+            }
+        }
+
         // Transfer to receiver
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token
-            TransferHelper.safeTransferFrom(params.token, msg.sender, params.receiver, finalAmount - totalFee);
+            TransferHelper.safeTransferFrom(params.token, msg.sender, params.receiver, receivedAmount);
         } else {
             // Native ether
-            (bool success,) = params.receiver.call{value: finalAmount - totalFee}("");
+            (bool success,) = params.receiver.call{value: receivedAmount}("");
             require(success, "transfer of the native token to the recipient failed");
-            emit YodlNativeTokenTransfer(msg.sender, params.receiver, finalAmount - totalFee);
+            emit YodlNativeTokenTransfer(msg.sender, params.receiver, receivedAmount);
         }
 
         emit Yodl(msg.sender, params.receiver, params.token, finalAmount, totalFee, params.memo);
 
-        return finalAmount - totalFee;
+        return receivedAmount;
     }
 }
