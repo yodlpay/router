@@ -25,7 +25,7 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         // Metadata tracker for the payment
         uint256 yd;
         // List of YApps that are allowed to be called with IBeforeHook.beforeHook extension
-        address[] yAppList;
+        YApp[] yAppList;
     }
 
     /**
@@ -118,8 +118,13 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         uint256 receivedAmount = finalAmount - totalFee;
         if (params.yAppList.length > 0) {
             for (uint256 i = 0; i < params.yAppList.length; i++) {
-                IBeforeHook(params.yAppList[i]).beforeHook(
-                    msg.sender, params.receiver, receivedAmount, params.token, params.memo
+                IBeforeHook(params.yAppList[i].yApp).beforeHook(
+                    msg.sender,
+                    params.receiver,
+                    receivedAmount,
+                    params.token,
+                    params.yAppList[i].yd,
+                    params.yAppList[i].payload
                 );
             }
         }

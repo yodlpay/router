@@ -16,7 +16,12 @@ contract ChainalysisOfacExtension is IBeforeHook {
         chainalysisOracle = ChainalysisOracle(_chainalysisOracle);
     }
 
-    function beforeHook(address sender, address, uint256, address, bytes32) external view override returns (uint256) {
+    function beforeHook(address sender, address, uint256, address, uint256, bytes[] calldata)
+        external
+        view
+        override
+        returns (uint256)
+    {
         require(chainalysisOracle.isSanctioned(sender) == false, "sender is sanctioned");
         return 0;
     }

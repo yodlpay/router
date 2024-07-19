@@ -28,7 +28,7 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         uint256 extraFeeBps;
         uint256 yd;
         // List of YApps that are allowed to be called with IBeforeHook.beforeHook extension
-        address[] yAppList;
+        YApp[] yAppList;
     }
 
     constructor(address _curveRouter) {
@@ -57,8 +57,13 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         }
         if (params.yAppList.length > 0) {
             for (uint256 i = 0; i < params.yAppList.length; i++) {
-                IBeforeHook(params.yAppList[i]).beforeHook(
-                    msg.sender, params.receiver, amountOutExpected, tokenOut, params.memo
+                IBeforeHook(params.yAppList[i].yApp).beforeHook(
+                    msg.sender,
+                    params.receiver,
+                    amountOutExpected,
+                    tokenOut,
+                    params.yAppList[i].yd,
+                    params.yAppList[i].payload
                 );
             }
         }

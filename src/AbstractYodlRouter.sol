@@ -40,6 +40,18 @@ abstract contract AbstractYodlRouter {
     /// @param exchangeRate1 The rate used from the price feed at the time of conversion
     event Convert(address indexed priceFeed0, address indexed priceFeed1, int256 exchangeRate0, int256 exchangeRate1);
 
+    /**
+     * @notice Struct to hold the YApp address and the YD ID
+     * @param yApp The address of the YApp
+     * @param yd The ID of the YD
+     * @param payload The payload to be sent to the YApp
+     */
+    struct YApp {
+        address yApp;
+        uint256 yd;
+        bytes[] payload;
+    }
+
     /// @notice Enables the contract to receive Ether
     /// @dev We need a receive method for when we withdraw WETH to the router. It does not need to do anything.
     receive() external payable {}
