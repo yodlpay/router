@@ -28,10 +28,15 @@ with the option of performing token swaps via Curve or Uniswap to settle the pay
     - Integrates with Uniswap V3 for token swaps.
     - Supports single-hop and multi-hop swaps, with the option to handle native tokens.
 
-5. **[Polygon|Ethereum|Gnosis|Base|Optimism|ArbitrumOne]YodlRouter.sol**
+5. **YodlPancakeRouter.sol**
+    - Extends `YodlUniswapRouter`.
+    - Integrates with Pancake V3 for token swaps on BSC chain.
+    - Supports single-hop and multi-hop swaps, with the option to handle native tokens.
+
+6**[Polygon|Ethereum|Gnosis|Base|Optimism|ArbitrumOne|Bsc]YodlRouter.sol**
     - Inherits from `YodlTransferRouter`, `YodlCurveRouter`, and `YodlUniswapRouter`.
     - Provides a specific implementation for every supported blockchain network.
-    - Initializes the necessary router contracts for regular, Curve, and Uniswap payments.
+    - Initializes the necessary router contracts for regular, Curve, Uniswap and Pancakeswap payments.
 
 ### Deployment
 Deployment to various networks is automated using the script [deploy_router.sh](./deploy_scripts/deploy_router.sh).
@@ -65,6 +70,7 @@ Deployment to various networks is automated using the script [deploy_ofac.sh](./
 - [Optimism](https://optimistic.etherscan.io/address/0xda098d882d85547f613f976866a449a7c2778761)
 - [Arbitrum One](https://arbiscan.io/address/0x589fce694575064b5637310804587338037d1de9)
 - [Base](https://basescan.org/address/0x1659b18083b6600c16539883e02634fa86dffda4)
+- [BSC](https://bscscan.com/address/0x8F22f265e8C9BdBD459a1621fF85E196507D4152)
 
 ## License
 The YodlRouter is released under the [BSL-1.1 License](https://mariadb.com/bsl-faq-adopting/#whatis).

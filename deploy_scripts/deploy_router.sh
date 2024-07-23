@@ -16,3 +16,7 @@ forge create --rpc-url https://mainnet.optimism.io --verify --verifier-url https
 
 ### Deploy to Arbitrum One and verify contract sources
 forge create --rpc-url https://arb1.arbitrum.io/rpc --verify --verifier-url https://api.arbiscan.io/api --interactive --etherscan-api-key U516IXEMJA8QJPB8KPKYUB9RKBR88MMH31 --chain 42161 src/chains/ArbitrumOneYodlRouter.sol:YodlRouter
+
+### Deploy to Binance Smart Chain and verify contract sources
+forge create --rpc-url https://bsc-dataseed1.binance.org/ --verify --verifier-url https://api.bscscan.com/api --interactive --etherscan-api-key BIEUE31QJY51WP25C3UHKYBSCYX61KHG5R --chain 56 src/chains/BscYodlRouter.sol:YodlRouter
+

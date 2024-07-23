@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: BSL-1.1
+
+// @author samthebuilder.eth
+pragma solidity ^0.8.26;
+
+import "../routers/YodlTransferRouter.sol";
+import "../routers/YodlPancakeRouter.sol";
+
+contract YodlRouter is YodlTransferRouter, YodlPancakeRouter {
+    constructor()
+        AbstractYodlRouter()
+        YodlTransferRouter()
+        YodlPancakeRouter(0x13f4EA83D0bd40E75C8222255bc855a974568Dd4)
+    {
+        version = "vSam";
+        yodlFeeBps = 20;
+        yodlFeeTreasury = 0x698609f1ae8E0ce7e65d3028d1f00297A6bF21e5;
+        wrappedNativeToken = IWETH9(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
+    }
+}

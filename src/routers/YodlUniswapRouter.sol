@@ -102,7 +102,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
                 sqrtPriceLimitX96: 0
             });
 
-            amountSpent = ISwapRouter02(uniswapRouter).exactOutputSingle(routerParams);
+            amountSpent = uniswapRouter.exactOutputSingle(routerParams);
         } else {
             IV3SwapRouter.ExactOutputParams memory routerParams = IV3SwapRouter.ExactOutputParams({
                 path: params.path,
@@ -111,7 +111,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
                 amountInMaximum: params.amountIn
             });
 
-            amountSpent = ISwapRouter02(uniswapRouter).exactOutput(routerParams);
+            amountSpent = uniswapRouter.exactOutput(routerParams);
         }
 
         // Handle unwrapping wrapped native token
