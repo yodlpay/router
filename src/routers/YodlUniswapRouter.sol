@@ -60,7 +60,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
         if (params.yAppList.length > 0) {
             for (uint256 i = 0; i < params.yAppList.length; i++) {
                 IBeforeHook(params.yAppList[i].yApp).beforeHook(
-                    msg.sender,
+                    tx.origin,
                     params.receiver,
                     amountOutExpected,
                     tokenOut,
@@ -80,7 +80,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
             tokenIn = address(wrappedNativeToken);
         } else {
             // Transfer the ERC20 token from the sender to the YodlRouter
-            TransferHelper.safeTransferFrom(tokenIn, msg.sender, address(this), params.amountIn);
+            TransferHelper.safeTransferFrom(tokenIn, tx.origin, address(this), params.amountIn);
         }
         TransferHelper.safeApprove(tokenIn, address(uniswapRouter), params.amountIn);
 
