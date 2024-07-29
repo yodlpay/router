@@ -104,8 +104,12 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
 
             amountSpent = uniswapRouter.exactOutputSingle(routerParams);
         } else {
+            // We need to extract the path details so that we can use the tokenIn value from earlier which may have been replaced by WETH
+            (, uint24 poolFee2, address tokenBase, uint24 poolFee1,) =
+                abi.decode(params.path, (address, uint24, address, uint24, address));
+
             IV3SwapRouter.ExactOutputParams memory routerParams = IV3SwapRouter.ExactOutputParams({
-                path: params.path,
+                path: abi.encodePacked(tokenOut, poolFee2, tokenBase, poolFee1, tokenIn),
                 recipient: address(this),
                 amountOut: amountOutExpected,
                 amountInMaximum: params.amountIn
