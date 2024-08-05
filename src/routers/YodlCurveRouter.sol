@@ -23,7 +23,7 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         address[9] route;
         uint256[3][4] swapParams; // [i, j, swap_type] where i and j are the coin index for the n'th pool in route
         address[4] factoryAddresses;
-        PriceFeed[3] priceFeeds;
+        PriceFeed[2] priceFeeds;
         address extraFeeReceiver;
         uint256 extraFeeBps;
         uint256 yd;

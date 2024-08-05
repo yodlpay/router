@@ -23,7 +23,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
         uint256 amountOut; // The exact amount expected by merchant in tokenOut
         bytes32 memo;
         bytes path; // (address: tokenOut, uint24 poolfee, address: tokenIn) OR (address: tokenOut, uint24 poolfee2, address: tokenBase, uint24 poolfee1, tokenIn)
-        PriceFeed[3] priceFeeds;
+        PriceFeed[2] priceFeeds;
         address extraFeeReceiver;
         uint256 extraFeeBps;
         SwapType swapType;

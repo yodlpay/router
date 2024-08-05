@@ -15,6 +15,8 @@ abstract contract AbstractYodlRouter {
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 public constant MAX_EXTRA_FEE_BPS = 5_000; // 50%
     address public constant RATE_VERIFIER = 0xc71f6e1e4665d319610afA526BE529202cA13bB7;
+    int8 public constant CHAINLINK_FEED = 1;
+    int8 public constant EXTERNAL_FEED = 2;
 
     /// @notice Emitted when a payment goes through
     /// @param sender The address who has made the payment
@@ -64,14 +66,16 @@ abstract contract AbstractYodlRouter {
 
     /**
      * @notice Struct to hold the price feed information, it's either Chainlink or external
-     * @param feedAddress The address of the Chainlink price feed
-     * @param currency The currency of the price feed, if not Chainlink
-     * @param amount The amount to be converted by the price feed exchange rates, if feedAddress is ZERO_ADDRESS
-     * @param decimals The number of decimals in the price feed
-     * @param signature The signature of the price feed
+     * @param feedAddress The address of the Chainlink price feed, ZERO otherwise
+     * @param feedType The type of the price feed, 1 for Chainlink, 2 for external
+     * @param currency The currency of the price feed, if external, ZERO otherwise
+     * @param amount The amount to be converted by the price feed exchange rates, if external, ZERO otherwise
+     * @param decimals The number of decimals in the price feed, if external, ZERO otherwise
+     * @param signature The signature of the price feed, if external, ZERO otherwise
      */
     struct PriceFeed {
         address feedAddress;
+        int8 feedType;
         string currency;
         uint256 amount;
         uint256 decimals;
@@ -103,25 +107,23 @@ abstract contract AbstractYodlRouter {
      * @return priceFeedsUsed The price feeds in the order they were used
      * @return prices The exchange rates from the price feeds
      */
-    function exchangeRate(PriceFeed[3] calldata priceFeeds, uint256 amount)
+    function exchangeRate(PriceFeed[2] calldata priceFeeds, uint256 amount)
         public
         returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
     {
         bool shouldInverse;
-        bool isExternal;
 
         AggregatorV3Interface priceFeedOne;
         AggregatorV3Interface priceFeedTwo; // might not exist
 
-        if (priceFeeds[0].feedAddress == address(0)) {
+        if (priceFeeds[0].feedAddress == address(0) && priceFeeds[0].feedType == CHAINLINK_FEED) {
             // Inverse the price feed. invoiceAmount: USD, settlementAmount: CHF
             shouldInverse = true;
             priceFeedOne = AggregatorV3Interface(priceFeeds[1].feedAddress);
         } else {
             // No need to inverse. invoiceAmount: CHF, settlementAmount: USD
-            if (priceFeeds[2].feedAddress != address(0)) {
-                isExternal = true;
-                if (!verifyRateSignature(priceFeeds[2])) {
+            if (priceFeeds[0].feedType == EXTERNAL_FEED) {
+                if (!verifyRateSignature(priceFeeds[0])) {
                     revert("Invalid signature for external price feed");
                 }
             } else {
@@ -136,10 +138,10 @@ abstract contract AbstractYodlRouter {
         uint256 decimals;
         int256 price;
 
-        if (isExternal) {
-            decimals = priceFeeds[2].decimals;
-            prices[0] = int256(priceFeeds[2].amount);
-            price = int256(priceFeeds[2].amount);
+        if (priceFeeds[0].feedType == EXTERNAL_FEED) {
+            decimals = priceFeeds[0].decimals;
+            price = int256(priceFeeds[0].amount);
+            prices[0] = price;
         } else {
             // Calculate the converted value using price feeds
             decimals = uint256(10 ** uint256(priceFeedOne.decimals()));
@@ -160,8 +162,8 @@ abstract contract AbstractYodlRouter {
             converted = (converted * decimals) / uint256(price);
         }
 
-        if (isExternal) {
-            emit ConvertWithExternalRate(priceFeeds[2].currency, priceFeeds[1].feedAddress, prices[0], prices[1]);
+        if (priceFeeds[0].feedType == EXTERNAL_FEED) {
+            emit ConvertWithExternalRate(priceFeeds[0].currency, priceFeeds[1].feedAddress, prices[0], prices[1]);
         } else {
             emit Convert(priceFeeds[0].feedAddress, priceFeeds[1].feedAddress, prices[0], prices[1]);
         }
