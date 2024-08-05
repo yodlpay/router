@@ -78,7 +78,7 @@ abstract contract AbstractYodlRouter {
         int8 feedType;
         string currency;
         uint256 amount;
-        uint256 decimals;
+        uint256 deadline;
         bytes signature;
     }
 
@@ -139,7 +139,7 @@ abstract contract AbstractYodlRouter {
         int256 price;
 
         if (priceFeeds[0].feedType == EXTERNAL_FEED) {
-            decimals = priceFeeds[0].decimals;
+            decimals = 18;
             price = int256(priceFeeds[0].amount);
             prices[0] = price;
         } else {
@@ -232,10 +232,13 @@ abstract contract AbstractYodlRouter {
         }
     }
 
-    function verifyRateSignature(PriceFeed calldata priceFeed) public pure returns (bool) {
-        bytes32 messageHash = keccak256(abi.encodePacked(priceFeed.currency, priceFeed.amount, priceFeed.decimals));
+    function verifyRateSignature(PriceFeed calldata priceFeed) public view returns (bool) {
+        bytes32 messageHash = keccak256(abi.encodePacked(priceFeed.currency, priceFeed.amount, priceFeed.deadline));
         bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
 
+        if (priceFeed.deadline < block.timestamp) {
+            return false;
+        }
         return recoverSigner(ethSignedMessageHash, priceFeed.signature) == RATE_VERIFIER;
     }
 
