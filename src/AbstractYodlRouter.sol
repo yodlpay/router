@@ -46,7 +46,9 @@ abstract contract AbstractYodlRouter {
     /// @param priceFeed1 The address of the price feed used for conversion
     /// @param exchangeRate0 The rate used from the price feed at the time of conversion
     /// @param exchangeRate1 The rate used from the price feed at the time of conversion
-    event ConvertWithExternalRate(string indexed currency0, address indexed priceFeed1, int256 exchangeRate0, int256 exchangeRate1);
+    event ConvertWithExternalRate(
+        string indexed currency0, address indexed priceFeed1, int256 exchangeRate0, int256 exchangeRate1
+    );
 
     /**
      * @notice Struct to hold the YApp address and the YD ID
@@ -61,13 +63,13 @@ abstract contract AbstractYodlRouter {
     }
 
     /**
-        * @notice Struct to hold the price feed information, it's either Chainlink or external
-        * @param feedAddress The address of the Chainlink price feed
-        * @param currency The currency of the price feed, if not Chainlink
-        * @param amount The amount to be converted by the price feed exchange rates, if feedAddress is ZERO_ADDRESS
-        * @param decimals The number of decimals in the price feed
-        * @param signature The signature of the price feed
-        */
+     * @notice Struct to hold the price feed information, it's either Chainlink or external
+     * @param feedAddress The address of the Chainlink price feed
+     * @param currency The currency of the price feed, if not Chainlink
+     * @param amount The amount to be converted by the price feed exchange rates, if feedAddress is ZERO_ADDRESS
+     * @param decimals The number of decimals in the price feed
+     * @param signature The signature of the price feed
+     */
     struct PriceFeed {
         address feedAddress;
         string currency;
@@ -102,8 +104,8 @@ abstract contract AbstractYodlRouter {
      * @return prices The exchange rates from the price feeds
      */
     function exchangeRate(PriceFeed[3] calldata priceFeeds, uint256 amount)
-    public
-    returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
+        public
+        returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
     {
         bool shouldInverse;
         bool isExternal;
@@ -202,8 +204,8 @@ abstract contract AbstractYodlRouter {
     /// @param to The address to which the fee will be sent
     /// @return The fee sent
     function transferFee(uint256 amount, uint256 feeBps, address token, address from, address to)
-    public
-    returns (uint256)
+        public
+        returns (uint256)
     {
         uint256 fee = calculateFee(amount, feeBps);
         if (fee > 0) {
@@ -241,15 +243,7 @@ abstract contract AbstractYodlRouter {
         return ecrecover(_ethSignedMessageHash, v, r, s);
     }
 
-    function splitSignature(bytes memory sig)
-    private
-    pure
-    returns (
-        bytes32 r,
-        bytes32 s,
-        uint8 v
-    )
-    {
+    function splitSignature(bytes memory sig) private pure returns (bytes32 r, bytes32 s, uint8 v) {
         require(sig.length == 65, "invalid signature length");
 
         assembly {
