@@ -53,6 +53,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
             int256[2] memory prices;
             address[2] memory priceFeeds;
             (amountOutExpected, priceFeeds, prices) = exchangeRate(params.priceFeeds, params.amountOut);
+            emitConversionEvent(params.priceFeeds, prices);
         } else {
             amountOutExpected = params.amountOut;
         }

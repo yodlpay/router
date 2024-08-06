@@ -84,6 +84,7 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
                 int256[2] memory prices;
                 address[2] memory priceFeedsUsed;
                 (finalAmount, priceFeedsUsed, prices) = exchangeRate(params.priceFeeds, params.amount);
+                emitConversionEvent(params.priceFeeds, prices);
             }
         }
 
