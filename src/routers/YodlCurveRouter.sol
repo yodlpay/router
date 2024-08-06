@@ -23,7 +23,7 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         address[9] route;
         uint256[3][4] swapParams; // [i, j, swap_type] where i and j are the coin index for the n'th pool in route
         address[4] factoryAddresses;
-        address[2] priceFeeds;
+        PriceFeed[2] priceFeeds;
         address extraFeeReceiver;
         uint256 extraFeeBps;
         uint256 yd;
@@ -46,12 +46,11 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
 
         // This is how much the recipient needs to receive
         uint256 amountOutExpected;
-        if (params.priceFeeds[0] != address(0) || params.priceFeeds[1] != address(0)) {
+        if (params.priceFeeds[0].feedAddress != address(0) || params.priceFeeds[1].feedAddress != address(0)) {
             // Convert amountOut from invoice currency to swap currency using price feed
             int256[2] memory prices;
             address[2] memory priceFeeds;
             (amountOutExpected, priceFeeds, prices) = exchangeRate(params.priceFeeds, params.amountOut);
-            emit Convert(priceFeeds[0], priceFeeds[1], prices[0], prices[1]);
         } else {
             amountOutExpected = params.amountOut;
         }

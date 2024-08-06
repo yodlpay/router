@@ -13,7 +13,7 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         // The amount to pay before any price feeds are applied. This amount will be converted by the price feeds and then the sender will pay the converted amount in the given token.
         uint256 amount;
         // Array of Chainlink price feeds. See `exchangeRate` method for more details.
-        address[2] priceFeeds;
+        PriceFeed[2] priceFeeds;
         // Token address to be used for the payment. Either an ERC20 token or the native token address.
         address token;
         // Address to receive the payment
@@ -79,12 +79,11 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         uint256 finalAmount = params.amount;
 
         // transform amount with priceFeeds
-        if (params.priceFeeds[0] != address(0) || params.priceFeeds[1] != address(0)) {
+        if (params.priceFeeds[0].feedAddress != address(0) || params.priceFeeds[1].feedAddress != address(0)) {
             {
                 int256[2] memory prices;
                 address[2] memory priceFeedsUsed;
                 (finalAmount, priceFeedsUsed, prices) = exchangeRate(params.priceFeeds, params.amount);
-                emit Convert(priceFeedsUsed[0], priceFeedsUsed[1], prices[0], prices[1]);
             }
         }
 

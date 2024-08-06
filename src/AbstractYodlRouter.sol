@@ -14,6 +14,9 @@ abstract contract AbstractYodlRouter {
     IWETH9 public wrappedNativeToken;
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 public constant MAX_EXTRA_FEE_BPS = 5_000; // 50%
+    address public constant RATE_VERIFIER = 0xc71f6e1e4665d319610afA526BE529202cA13bB7;
+    int8 public constant CHAINLINK_FEED = 1;
+    int8 public constant EXTERNAL_FEED = 2;
 
     /// @notice Emitted when a payment goes through
     /// @param sender The address who has made the payment
@@ -40,6 +43,15 @@ abstract contract AbstractYodlRouter {
     /// @param exchangeRate1 The rate used from the price feed at the time of conversion
     event Convert(address indexed priceFeed0, address indexed priceFeed1, int256 exchangeRate0, int256 exchangeRate1);
 
+    /// @notice Emitted when a conversion has occurred from one currency to another using a Chainlink price feed and external rate
+    /// @param currency0 The currency used for the first conversion
+    /// @param priceFeed1 The address of the price feed used for conversion
+    /// @param exchangeRate0 The rate used from the price feed at the time of conversion
+    /// @param exchangeRate1 The rate used from the price feed at the time of conversion
+    event ConvertWithExternalRate(
+        string indexed currency0, address indexed priceFeed1, int256 exchangeRate0, int256 exchangeRate1
+    );
+
     /**
      * @notice Struct to hold the YApp address and the YD ID
      * @param yApp The address of the YApp
@@ -50,6 +62,24 @@ abstract contract AbstractYodlRouter {
         address yApp;
         uint256 sessionId;
         bytes[] payload;
+    }
+
+    /**
+     * @notice Struct to hold the price feed information, it's either Chainlink or external
+     * @param feedAddress The address of the Chainlink price feed, ZERO otherwise
+     * @param feedType The type of the price feed, 1 for Chainlink, 2 for external
+     * @param currency The currency of the price feed, if external, ZERO otherwise
+     * @param amount The amount to be converted by the price feed exchange rates, if external, ZERO otherwise
+     * @param decimals The number of decimals in the price feed, if external, ZERO otherwise
+     * @param signature The signature of the price feed, if external, ZERO otherwise
+     */
+    struct PriceFeed {
+        address feedAddress;
+        int8 feedType;
+        string currency;
+        uint256 amount;
+        uint256 deadline;
+        bytes signature;
     }
 
     /// @notice Enables the contract to receive Ether
@@ -71,42 +101,53 @@ abstract contract AbstractYodlRouter {
      *
      * The second pricefeed is inversed. So in b) and c) `CHF_USD` turns into `USD_CHF`.
      *
-     * @param priceFeeds Array of Chainlink price feeds
+     * @param priceFeeds Array of PriceFeeds, either Chainlink or external
      * @param amount Amount to be converted by the price feed exchange rates
      * @return converted The amount after conversion
      * @return priceFeedsUsed The price feeds in the order they were used
      * @return prices The exchange rates from the price feeds
      */
-    function exchangeRate(address[2] calldata priceFeeds, uint256 amount)
+    function exchangeRate(PriceFeed[2] calldata priceFeeds, uint256 amount)
         public
-        view
         returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
     {
-        require(priceFeeds[0] != address(0) || priceFeeds[1] != address(0), "invalid pricefeeds");
-
         bool shouldInverse;
 
         AggregatorV3Interface priceFeedOne;
         AggregatorV3Interface priceFeedTwo; // might not exist
 
-        if (priceFeeds[0] == address(0)) {
+        if (priceFeeds[0].feedAddress == address(0) && priceFeeds[0].feedType == CHAINLINK_FEED) {
             // Inverse the price feed. invoiceAmount: USD, settlementAmount: CHF
             shouldInverse = true;
-            priceFeedOne = AggregatorV3Interface(priceFeeds[1]);
+            priceFeedOne = AggregatorV3Interface(priceFeeds[1].feedAddress);
         } else {
             // No need to inverse. invoiceAmount: CHF, settlementAmount: USD
-            priceFeedOne = AggregatorV3Interface(priceFeeds[0]);
-            if (priceFeeds[1] != address(0)) {
+            if (priceFeeds[0].feedType == EXTERNAL_FEED) {
+                if (!verifyRateSignature(priceFeeds[0])) {
+                    revert("Invalid signature for external price feed");
+                }
+            } else {
+                priceFeedOne = AggregatorV3Interface(priceFeeds[0].feedAddress);
+            }
+            if (priceFeeds[1].feedAddress != address(0)) {
                 // Multiply by the first, divide by the second
                 // Will always be A -> USD -> B
-                priceFeedTwo = AggregatorV3Interface(priceFeeds[1]);
+                priceFeedTwo = AggregatorV3Interface(priceFeeds[1].feedAddress);
             }
         }
+        uint256 decimals;
+        int256 price;
 
-        // Calculate the converted value using price feeds
-        uint256 decimals = uint256(10 ** uint256(priceFeedOne.decimals()));
-        (, int256 price,,,) = priceFeedOne.latestRoundData();
-        prices[0] = price;
+        if (priceFeeds[0].feedType == EXTERNAL_FEED) {
+            decimals = 18;
+            price = int256(priceFeeds[0].amount);
+            prices[0] = price;
+        } else {
+            // Calculate the converted value using price feeds
+            decimals = uint256(10 ** uint256(priceFeedOne.decimals()));
+            (, price,,,) = priceFeedOne.latestRoundData();
+            prices[0] = price;
+        }
         if (shouldInverse) {
             converted = (amount * decimals) / uint256(price);
         } else {
@@ -121,7 +162,12 @@ abstract contract AbstractYodlRouter {
             converted = (converted * decimals) / uint256(price);
         }
 
-        return (converted, [address(priceFeedOne), address(priceFeedTwo)], prices);
+        if (priceFeeds[0].feedType == EXTERNAL_FEED) {
+            emit ConvertWithExternalRate(priceFeeds[0].currency, priceFeeds[1].feedAddress, prices[0], prices[1]);
+        } else {
+            emit Convert(priceFeeds[0].feedAddress, priceFeeds[1].feedAddress, prices[0], prices[1]);
+        }
+        return (converted, [priceFeeds[0].feedAddress, priceFeeds[1].feedAddress], prices);
     }
 
     /// @notice Helper function to calculate fees
@@ -184,5 +230,33 @@ abstract contract AbstractYodlRouter {
         } else {
             return 0;
         }
+    }
+
+    function verifyRateSignature(PriceFeed calldata priceFeed) public view returns (bool) {
+        bytes32 messageHash = keccak256(abi.encodePacked(priceFeed.currency, priceFeed.amount, priceFeed.deadline));
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+
+        if (priceFeed.deadline < block.timestamp) {
+            return false;
+        }
+        return recoverSigner(ethSignedMessageHash, priceFeed.signature) == RATE_VERIFIER;
+    }
+
+    function recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _signature) private pure returns (address) {
+        (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
+
+        return ecrecover(_ethSignedMessageHash, v, r, s);
+    }
+
+    function splitSignature(bytes memory sig) private pure returns (bytes32 r, bytes32 s, uint8 v) {
+        require(sig.length == 65, "invalid signature length");
+
+        assembly {
+            r := mload(add(sig, 32))
+            s := mload(add(sig, 64))
+            v := byte(0, mload(add(sig, 96)))
+        }
+
+        return (r, s, v);
     }
 }
