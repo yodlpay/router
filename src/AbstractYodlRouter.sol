@@ -15,6 +15,8 @@ abstract contract AbstractYodlRouter {
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 public constant MAX_EXTRA_FEE_BPS = 5_000; // 50%
     address public constant RATE_VERIFIER = 0xc71f6e1e4665d319610afA526BE529202cA13bB7;
+
+    int8 public constant NULL_FEED = 0;
     int8 public constant CHAINLINK_FEED = 1;
     int8 public constant EXTERNAL_FEED = 2;
 
@@ -139,7 +141,7 @@ abstract contract AbstractYodlRouter {
         int256 price;
 
         if (priceFeeds[0].feedType == EXTERNAL_FEED) {
-            decimals = 18;
+            decimals = uint256(10 ** uint256(18));
             price = int256(priceFeeds[0].amount);
             prices[0] = price;
         } else {
