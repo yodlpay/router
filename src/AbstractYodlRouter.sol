@@ -145,13 +145,18 @@ abstract contract AbstractYodlRouter {
         AggregatorV3Interface priceFeedOne;
         AggregatorV3Interface priceFeedTwo; // might not exist
 
-        if (
-            priceFeeds[0].feedAddress == address(0) &&
-            priceFeeds[0].feedType == CHAINLINK_FEED
-        ) {
+        if (priceFeeds[0].feedType == NULL_FEED) {
             // Inverse the price feed. invoiceCurrency: USD, settlementCurrency: CHF
-            shouldInverse = true;
-            priceFeedOne = AggregatorV3Interface(priceFeeds[1].feedAddress);
+            if (priceFeeds[1].feedType == NULL_FEED) {
+                return (
+                    amount,
+                    [address(0), address(0)],
+                    [int256(1), int256(1)]
+                );
+            } else {
+                shouldInverse = true;
+                priceFeedOne = AggregatorV3Interface(priceFeeds[1].feedAddress);
+            }
         } else {
             // No need to inverse. invoiceCurrency: CHF, settlementCurrency: USD
             if (priceFeeds[0].feedType == EXTERNAL_FEED) {

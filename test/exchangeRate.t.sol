@@ -8,49 +8,100 @@ import "../src/AbstractYodlRouter.sol";
 import "../src/chains/EthereumYodlRouter.sol";
 
 contract YodlRouterV1Test is Test {
-    event Payment(
-        address indexed sender,
-        address indexed receiver,
-        address token /* the token that payee receives, use address(0) for AVAX*/,
-        uint256 amount,
-        uint256 fee,
-        bytes32 memo
-    );
-
-    event Convert(address indexed priceFeed, int256 exchangeRate);
-
-    YodlRouter ethRouter;
-    address merchantAddress;
-    address treasuryAddress;
-    address senderAddress;
-    address extraFeeAddress;
-    uint256 baseFeeBps;
-    bytes32 defaultMemo;
-    address constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address constant WRAPPED_NATIVE_TOKEN =
-        0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    // Amounts over this are liable to overflow - lets assume no one will transact this much
-    uint256 constant APPROX_MAX_AMOUNT = 1e68;
+    YodlRouter yodlRouter;
+    YodlRouter.PriceFeed nullFeed;
 
     function setUp() public {
-        baseFeeBps = 25;
-        treasuryAddress = address(123);
-        extraFeeAddress = address(1338);
-        defaultMemo = "hi";
-
-        ethRouter = new YodlRouter();
+        nullFeed = AbstractYodlRouter.PriceFeed({
+            feedAddress: address(0),
+            feedType: 0,
+            currency: "",
+            amount: 0,
+            deadline: 0,
+            signature: ""
+        });
+        yodlRouter = new YodlRouter();
     }
 
     // test..Scenarios are useful for --gas-reports
 
-    function test_PaymentWithSmallAmount() public {
-        // Ensure fee calculation does not trip over if amount is too small.
+    function test_ExchangeRateWithNullFeeds() public {
         (
             uint256 converted,
             address[2] memory priceFeedsUsed,
             int256[2] memory prices
-        ) = ethRouter.exchangeRate();
+        ) = yodlRouter.exchangeRate([nullFeed, nullFeed], 1000000);
 
-        assertEq(token.balanceOf(senderAddress), 0);
+        assertEq(converted, 1000000);
+    }
+
+    function test_ExchangeRateWithPriceFeeds() public {
+        address priceFeedAddress = address(12345);
+        address[2] memory feeds = [priceFeedAddress, address(0)];
+
+        vm.mockCall(
+            priceFeedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
+            abi.encode(8)
+        );
+        vm.mockCall(
+            priceFeedAddress,
+            abi.encodeWithSelector(
+                AggregatorV3Interface.latestRoundData.selector
+            ),
+            abi.encode(0, 1_06_570_000, 0, 0, 0)
+        );
+
+        uint256 amount = 20000000;
+        AbstractYodlRouter.PriceFeed memory pf0 = AbstractYodlRouter.PriceFeed({
+            feedAddress: address(12345),
+            feedType: 1,
+            currency: "",
+            amount: 0,
+            deadline: 0,
+            signature: ""
+        });
+        (
+            uint256 converted,
+            address[2] memory priceFeedsUsed,
+            int256[2] memory prices
+        ) = yodlRouter.exchangeRate([pf0, nullFeed], 20000000);
+
+        assertEq(converted, 2 * 10657000);
+    }
+
+    function test_ExchangeRateWithPriceFeedsInverse() public {
+        address priceFeedAddress = address(12345);
+        address[2] memory feeds = [priceFeedAddress, address(0)];
+
+        vm.mockCall(
+            priceFeedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
+            abi.encode(8)
+        );
+        vm.mockCall(
+            priceFeedAddress,
+            abi.encodeWithSelector(
+                AggregatorV3Interface.latestRoundData.selector
+            ),
+            abi.encode(0, 1_06570000, 0, 0, 0)
+        );
+
+        uint256 amount = 20000000;
+        AbstractYodlRouter.PriceFeed memory pf = AbstractYodlRouter.PriceFeed({
+            feedAddress: address(12345),
+            feedType: 1,
+            currency: "",
+            amount: 0,
+            deadline: 0,
+            signature: ""
+        });
+        (
+            uint256 converted,
+            address[2] memory priceFeedsUsed,
+            int256[2] memory prices
+        ) = yodlRouter.exchangeRate([nullFeed, pf], 20000000);
+
+        assertEq(converted, 18767007);
     }
 }
