@@ -276,7 +276,7 @@ abstract contract AbstractYodlRouter {
         address token,
         address from,
         address to
-    ) public returns (uint256) {
+    ) internal returns (uint256) {
         uint256 fee = calculateFee(amount, feeBps);
         if (fee > 0) {
             if (token != NATIVE_TOKEN) {
