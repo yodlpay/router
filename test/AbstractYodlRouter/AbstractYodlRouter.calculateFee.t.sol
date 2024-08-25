@@ -21,10 +21,12 @@ contract YodlAbstractRouterTest is Test {
         abstractRouter = new TestableAbstractYodlRouter();
     }
 
+    /* 
+    * Fuzz testing for calculateFee
+    * Should return: amount * feeBps / 10000
+    */
     function testFuzz_CalculateFee(uint256 amount, uint256 feeBps) public view {
         vm.assume(feeBps < 5000 && amount < APPROX_MAX_AMOUNT);
         assertEq(abstractRouter.calculateFee(amount, feeBps), amount * feeBps / 10000);
     }
-
-    // Your test functions go here
 }

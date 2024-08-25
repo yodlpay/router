@@ -12,7 +12,7 @@ contract YodlAbstractRouterTest is Test {
     address[2] priceFeedAddresses = [address(13480), address(13481)];
     AbstractYodlRouter.PriceFeed priceFeedBlank;
 
-    AbstractYodlRouter.PriceFeed priceFeed1 = AbstractYodlRouter.PriceFeed({
+    AbstractYodlRouter.PriceFeed priceFeed1 = AbstractYodlRouter.PriceFeed({ // rename to reflect currency. Potentially put in YodlAbstractRouterTest
         feedAddress: priceFeedAddresses[0],
         feedType: 0,
         currency: "USD",
@@ -21,7 +21,7 @@ contract YodlAbstractRouterTest is Test {
         signature: ""
     });
 
-    AbstractYodlRouter.PriceFeed priceFeed2 = AbstractYodlRouter.PriceFeed({
+    AbstractYodlRouter.PriceFeed priceFeed2 = AbstractYodlRouter.PriceFeed({ // rename to reflect currency
         feedAddress: priceFeedAddresses[0],
         feedType: 0,
         currency: "USD",
@@ -54,6 +54,7 @@ contract YodlAbstractRouterTest is Test {
         assertEq(prices[1], int256(1));
     }
 
+    /* Requires mockCalls to AggregatorV3Interface.decimals()  and AggregatorV3Interface.latestRoundData() */
     // function test_ExchangeRateSinglePriceFeed(uint256 amount) public {
     //     vm.assume(amount < 1e68); // amounts greater than this will have arithmetic overflow errors
     //     uint256 decimals = 8;
