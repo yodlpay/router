@@ -35,14 +35,17 @@ contract YodlAbstractRouterTest is Test {
         priceFeedBlank = abstractRouter.getBlankPriceFeed();
     }
 
-    /* Should return amount, [], [] when no PriceFeeds are passed */
+    /* 
+    * Scenario: No PriceFeeds are passed
+    * Should return: amount (as passed to it), two zero addresses for PriceFeeds and a price array of [1, 1]
+    */
     function test_ExchangeRateNoPriceFeed(uint256 amount) public view {
         vm.assume(amount < 1e68); // amounts greater than this will have arithmetic overflow errors
 
-        AbstractYodlRouter.PriceFeed[2] memory priceFeeds11 = [priceFeedBlank, priceFeedBlank];
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedBlank, priceFeedBlank];
 
         (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
-            abstractRouter.exchangeRate(priceFeeds11, amount);
+            abstractRouter.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, amount);
         assertEq(priceFeedsUsed[0], address(0));
