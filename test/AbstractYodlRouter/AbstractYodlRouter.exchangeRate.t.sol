@@ -32,7 +32,6 @@ contract YodlAbstractRouterTest is Test {
 
     function setUp() public {
         abstractRouter = new TestableAbstractYodlRouter();
-
         priceFeedBlank = abstractRouter.getBlankPriceFeed();
     }
 
@@ -42,18 +41,14 @@ contract YodlAbstractRouterTest is Test {
 
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds11 = [priceFeedBlank, priceFeedBlank];
 
-        // uint256 converted;
-        // int256[2] memory prices;
-        // address[2] memory priceFeedsUsed;
-        // (converted, priceFeedsUsed, prices) = abstractRouter.exchangeRate(priceFeeds11, amount);
         (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
             abstractRouter.exchangeRate(priceFeeds11, amount);
 
         assertEq(converted, amount);
-        assertEq(prices[0], 0);
-        assertEq(prices[1], 0);
         assertEq(priceFeedsUsed[0], address(0));
         assertEq(priceFeedsUsed[1], address(0));
+        assertEq(prices[0], int256(1));
+        assertEq(prices[1], int256(1));
     }
 
     // function test_ExchangeRateSinglePriceFeed(uint256 amount) public {
