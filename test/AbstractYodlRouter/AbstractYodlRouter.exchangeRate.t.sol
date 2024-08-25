@@ -12,8 +12,11 @@ contract YodlAbstractRouterTest is Test {
     address[2] priceFeedAddresses = [address(13480), address(13481)];
     AbstractYodlRouter.PriceFeed priceFeedBlank;
 
-    /* Redundant. Only need 0 address, feedType 1 and 2. 3 total. Create them in TestableAbstractYodlRouter? */
-    AbstractYodlRouter.PriceFeed priceFeed1 = AbstractYodlRouter.PriceFeed({ // rename to reflect currency. Potentially put in YodlAbstractRouterTest
+    /* 
+    * Redundant. Only need 0 address, feedType 1 and 2. 3 total. Create them in TestableAbstractYodlRouter? 
+    * serup like priceFeedBlank rename to reflect type (priceFeedType0, priceFeedType1 or priceFeedZERO).
+    */
+    AbstractYodlRouter.PriceFeed priceFeed1 = AbstractYodlRouter.PriceFeed({
         feedAddress: priceFeedAddresses[0],
         feedType: 1,
         currency: "USD",
@@ -23,9 +26,9 @@ contract YodlAbstractRouterTest is Test {
     });
 
     AbstractYodlRouter.PriceFeed priceFeed2 = AbstractYodlRouter.PriceFeed({ // rename to reflect currency
-        feedAddress: priceFeedAddresses[0],
+        feedAddress: priceFeedAddresses[1],
         feedType: 1,
-        currency: "USD",
+        currency: "uSDT",
         amount: 0,
         deadline: 0,
         signature: ""
@@ -56,7 +59,7 @@ contract YodlAbstractRouterTest is Test {
     }
 
     /* 
-    * Scenario: Only one PriceFeed[1] is passed
+    * Scenario: Only PriceFeed[1] is passed
     */
     function testFuzz_ExchangeRateOnlyPriceFeedTwo(uint256 amount) public {
         vm.assume(amount < 1e68); // amounts greater than this will have arithmetic overflow errors
@@ -81,7 +84,9 @@ contract YodlAbstractRouterTest is Test {
         (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
             abstractRouter.exchangeRate(priceFeeds, amount);
 
-        assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to calculated amount");
+        // assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to calculated amount");
+        assertEq(converted, (amount * 10 ** decimals) / uint256(price), "converted not equal to calculated amount");
+
         assertEq(prices[0], price, "prices[0] not equal to price");
         assertEq(prices[1], 0, "prices[1] != 0"); // shoud not exist
         assertEq(priceFeedsUsed[0], address(0), "priceFeedsUsed[0] not equal to address(0)");
@@ -89,7 +94,7 @@ contract YodlAbstractRouterTest is Test {
     }
 
     /* 
-    * Scenario: Only one PriceFeed[0] is passed
+    * Scenario: Only PriceFeed[0] is passed
     */
     function testFuzz_ExchangeRateOnlyPriceFeedOne(uint256 amount) public {
         vm.assume(amount < 1e68); // amounts greater than this will have arithmetic overflow errors
@@ -120,4 +125,37 @@ contract YodlAbstractRouterTest is Test {
         assertEq(priceFeedsUsed[0], priceFeeds[0].feedAddress, "priceFeedsUsed[0] not equal to address(0)");
         assertEq(priceFeedsUsed[1], address(0), "priceFeedsUsed[1] not equal to priceFeedAddresses[0]");
     }
+
+    // /* 
+    // * Scenario: Two priceFeeds are passed
+    // */
+    // function testFuzz_ExchangeRateTwoPriceFeeds(uint256 amount) public {
+    //     vm.assume(amount < 1e68); // amounts greater than this will have arithmetic overflow errors
+    //     AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeed1, priceFeed2];
+
+    //     /* Prepare mock data */
+    //     uint256 decimals = 8;
+    //     int256 price = 1_0657_0000; // the contract should return an int256
+
+    //     vm.mockCall(
+    //         priceFeeds[0].feedAddress,
+    //         abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
+    //         abi.encode(decimals)
+    //     );
+
+    //     vm.mockCall(
+    //         priceFeeds[0].feedAddress,
+    //         abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+    //         abi.encode(0, price, 0, 0, 0)
+    //     );
+
+    //     (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
+    //         abstractRouter.exchangeRate(priceFeeds, amount);
+
+    //     assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to calculated amount");
+    //     assertEq(prices[0], price, "prices[0] not equal to price");
+    //     assertEq(prices[1], 0, "prices[1] != 0"); // shoud not exist
+    //     assertEq(priceFeedsUsed[0], priceFeeds[0].feedAddress, "priceFeedsUsed[0] not equal to address(0)");
+    //     assertEq(priceFeedsUsed[1], address(0), "priceFeedsUsed[1] not equal to priceFeedAddresses[0]");
+    // }
 }

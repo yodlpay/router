@@ -7,8 +7,6 @@ import "../lib/v3-periphery/contracts/interfaces/external/IWETH9.sol";
 import "../lib/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-import "forge-std/Test.sol";
-
 abstract contract AbstractYodlRouter {
     string public version;
     address public yodlFeeTreasury;
@@ -168,7 +166,6 @@ abstract contract AbstractYodlRouter {
             decimals = uint256(10 ** uint256(priceFeedTwo.decimals()));
             (, price,,,) = priceFeedTwo.latestRoundData();
             prices[1] = price;
-            console.log("HALLOOO price: ", price);
             converted = (converted * decimals) / uint256(price);
         }
         return (converted, [priceFeeds[0].feedAddress, priceFeeds[1].feedAddress], prices);
