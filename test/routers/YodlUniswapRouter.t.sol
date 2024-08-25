@@ -6,7 +6,11 @@ import "forge-std/Test.sol";
 import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
 
-contract YodlUniswapRouterTest is Test {
-    
+contract YodlUniswapRouterTest is Test, AbstractYodlRouter {
+    AbstractYodlRouter abstractRouter;
 
+    function setUp() public {
+        // Deploy a mock implementation of AbstractYodlRouter
+        abstractRouter = new AbstractYodlRouter();
+    }
 }
