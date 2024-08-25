@@ -12,9 +12,10 @@ contract YodlAbstractRouterTest is Test {
     address[2] priceFeedAddresses = [address(13480), address(13481)];
     AbstractYodlRouter.PriceFeed priceFeedBlank;
 
+    /* Redundant. Only need 0 address, feedType 1 and 2. 3 total. Create them in TestableAbstractYodlRouter? */
     AbstractYodlRouter.PriceFeed priceFeed1 = AbstractYodlRouter.PriceFeed({ // rename to reflect currency. Potentially put in YodlAbstractRouterTest
         feedAddress: priceFeedAddresses[0],
-        feedType: 0,
+        feedType: 1,
         currency: "USD",
         amount: 0,
         deadline: 0,
@@ -23,7 +24,7 @@ contract YodlAbstractRouterTest is Test {
 
     AbstractYodlRouter.PriceFeed priceFeed2 = AbstractYodlRouter.PriceFeed({ // rename to reflect currency
         feedAddress: priceFeedAddresses[0],
-        feedType: 0,
+        feedType: 1,
         currency: "USD",
         amount: 0,
         deadline: 0,
@@ -47,40 +48,49 @@ contract YodlAbstractRouterTest is Test {
         (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
             abstractRouter.exchangeRate(priceFeeds, amount);
 
-        assertEq(converted, amount);
-        assertEq(priceFeedsUsed[0], address(0));
+        assertEq(converted, amount, "converted not equal to amount");
+        assertEq(priceFeedsUsed[0], address(0), "priceFeedsUsed[0] not equal to address(0)");
         assertEq(priceFeedsUsed[1], address(0));
         assertEq(prices[0], int256(1));
         assertEq(prices[1], int256(1));
     }
 
     /* Requires mockCalls to AggregatorV3Interface.decimals()  and AggregatorV3Interface.latestRoundData() */
-    // function test_ExchangeRateSinglePriceFeed(uint256 amount) public {
-    //     vm.assume(amount < 1e68); // amounts greater than this will have arithmetic overflow errors
-    //     uint256 decimals = 8;
-    //     int256 price = 1_0657_0000; // the contract should return an int256
-    //     vm.mockCall(
-    //         priceFeedAddresses[0], abi.encodeWithSelector(AggregatorV3Interface.decimals.selector), abi.encode(decimals)
-    //     );
-    //     vm.mockCall(
-    //         priceFeedAddresses[0],
-    //         abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-    //         abi.encode(0, price, 0, 0, 0)
-    //     );
+    function test_ExchangeRateOnlyPriceFeedTwo(uint256 amount) public {
+        vm.assume(amount < 1e68); // amounts greater than this will have arithmetic overflow errors
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedBlank, priceFeed1];
 
-    //     uint256 converted;
+        /* Prepare mock data */
+        uint256 decimals = 8;
+        int256 price = 1_0657_0000; // the contract should return an int256
 
-    //     address[2] memory feeds = [priceFeedAddresses[0], address(0)];
+        /* priceFeeds[1] bc inverted */
+        vm.mockCall(
+            priceFeeds[1].feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
+            abi.encode(decimals)
+        );
+        vm.mockCall(
+            priceFeeds[1].feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+            abi.encode(0, price, 0, 0, 0)
+        );
 
-    //     int256[2] memory prices;
-    //     address[2] memory priceFeeds;
-    //     (converted, priceFeeds, prices) = abstractRouter.exchangeRate(feeds, amount);
-    //     assertEq(converted, amount * uint256(price) / 10 ** decimals);
-    //     assertEq(prices[0], price);
-    //     assertEq(prices[1], 0);
-    //     assertEq(priceFeeds[0], priceFeedAddresses[0]);
-    //     assertEq(priceFeeds[1], address(0));
-    // }
+        (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
+            abstractRouter.exchangeRate(priceFeeds, amount);
+
+        assertEq(
+            converted,
+            amount * uint256(price) / 10 ** decimals,
+            "converted not equal to amount * price / 10 ** decimals"
+        );
+        assertEq(prices[0], price, "prices[0] not equal to price");
+        assertEq(prices[1], 0, "prices[1] != 0"); // shoud not exist
+        assertEq(priceFeedsUsed[0], address(0), "priceFeedsUsed[0] not equal to address(0)");
+        assertEq(priceFeedsUsed[1], priceFeeds[1].feedAddress, "priceFeedsUsed[1] not equal to priceFeedAddresses[0]");
+    }
+
+    // function test_ExchangeRateOnlyPriceFeed1(uint256 amount) public {
 
     // Your test functions go here
 }
