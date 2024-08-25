@@ -16,7 +16,12 @@ contract YodlAbstractRouterTest is Test {
         mockWrappedNativeToken = address(0x1);
         mockYodlFeeTreasury = address(0x2);
 
-        // helperContract = new TestableAbstractYodlRouter(mockWrappedNativeToken, mockYodlFeeTreasury, YODL_FEE_BPS);
+        helperContract = new TestableAbstractYodlRouter(mockWrappedNativeToken, mockYodlFeeTreasury, YODL_FEE_BPS);
+    }
+
+    function test_CaluclateFee() public view {
+        uint256 fee = helperContract.calculateFee(100, YODL_FEE_BPS);
+        vm.assertEq(fee, 1, "Fee should be 1% of 100");
     }
 
     // Your test functions go here
