@@ -7,21 +7,23 @@ import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
 import {TestableAbstractYodlRouter} from "./utils/TestableAbstractYodlRouter.t.sol";
 
 contract YodlAbstractRouterTest is Test {
-    TestableAbstractYodlRouter helperContract;
-    address mockWrappedNativeToken;
-    address mockYodlFeeTreasury;
-    uint256 constant YODL_FEE_BPS = 100; // 1%
+    TestableAbstractYodlRouter abstractRouter;
+    uint256 constant APPROX_MAX_AMOUNT = 1e68;
+    // address mockWrappedNativeToken;
+    // address mockYodlFeeTreasury;
+    // uint256 constant YODL_FEE_BPS = 100; // 1%
 
     function setUp() public {
-        mockWrappedNativeToken = address(0x1);
-        mockYodlFeeTreasury = address(0x2);
+        // mockWrappedNativeToken = address(0x1);
+        // mockYodlFeeTreasury = address(0x2);
 
-        helperContract = new TestableAbstractYodlRouter(mockWrappedNativeToken, mockYodlFeeTreasury, YODL_FEE_BPS);
+        // helperContract = new TestableAbstractYodlRouter(mockWrappedNativeToken, mockYodlFeeTreasury, YODL_FEE_BPS);
+        abstractRouter = new TestableAbstractYodlRouter();
     }
 
-    function test_CaluclateFee() public view {
-        uint256 fee = helperContract.calculateFee(100, YODL_FEE_BPS);
-        vm.assertEq(fee, 1, "Fee should be 1% of 100");
+    function testFuzz_CalculateFee(uint256 amount, uint256 feeBps) public view {
+        vm.assume(feeBps < 5000 && amount < APPROX_MAX_AMOUNT);
+        assertEq(abstractRouter.calculateFee(amount, feeBps), amount * feeBps / 10000);
     }
 
     // Your test functions go here
