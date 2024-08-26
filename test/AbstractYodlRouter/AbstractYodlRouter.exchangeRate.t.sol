@@ -186,7 +186,7 @@ contract YodlAbstractRouterTest is Test {
 
         (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
-        assertEq(converted, amount * uint256(priceFeeds[0].amount) / 10 ** 18, "converted not equal to expected amount"); 
+        assertEq(converted, amount * uint256(priceFeeds[0].amount) / 10 ** 18, "converted not equal to expected amount");
         assertEq(prices[0], int256(priceFeeds[0].amount), "prices[0] not equal to price");
     }
 
