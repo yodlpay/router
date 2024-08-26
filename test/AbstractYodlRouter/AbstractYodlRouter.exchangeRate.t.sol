@@ -176,12 +176,14 @@ contract YodlAbstractRouterTest is Test {
 
     /* 
     * Scenario: Only PriceFeed[0] is passed, testing all pricefeed decimals between 6-18
+    * Manual fuzzing as range is small.
     */
     function testFuzz_ExchangeRate_PricefeedDecimals() public {
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeed1, priceFeedBlank];
         uint256 amount = 999;
         int256 price = 1_0657_0000; // the contract should return an int256
 
+        // manually fuzzing
         for (uint8 decimals = 6; decimals <= 18; decimals++) {
             vm.mockCall(
                 priceFeeds[0].feedAddress,

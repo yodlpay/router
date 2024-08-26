@@ -37,4 +37,14 @@ contract YodlAbstractRouterTest is Test {
         uint256 feePbs = 0;
         assertEq(abstractRouter.calculateFee(amount, feePbs), 0);
     }
+
+    function test_CalculateFee_Lalal() public view {
+        uint256 amount = 100;
+        uint256 feePbs = 20;
+        uint256 expected = 2;
+        uint256 actual = abstractRouter.calculateFee(amount, feePbs);
+        console.log("expected: ", expected);
+        console.log("actual: ", actual);
+        assertEq(abstractRouter.calculateFee(amount, feePbs), 0);
+    }
 }
