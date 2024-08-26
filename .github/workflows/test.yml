@@ -30,7 +30,7 @@ jobs:
       - name: Run Forge fmt
         run: |
           forge fmt --check
-        id: check formatting
+        id: format
 
       - name: Run Forge build
         run: |
