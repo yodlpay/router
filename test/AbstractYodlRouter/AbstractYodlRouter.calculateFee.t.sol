@@ -22,11 +22,23 @@ contract YodlAbstractRouterTest is Test {
     }
 
     /* 
-    * Fuzz testing for calculateFee
-    * Should return: amount * feeBps / 10000
+    * Scenario: fuzz testing amount and feeBps
     */
     function testFuzz_CalculateFee(uint256 amount, uint256 feeBps) public view {
         vm.assume(feeBps < 5000 && amount < APPROX_MAX_AMOUNT);
         assertEq(abstractRouter.calculateFee(amount, feeBps), amount * feeBps / 10000);
+    }
+
+    /* 
+    * Scenario: feeBps is 0
+    */
+    function test_CalculateFee_FeePbsZero() public view {
+        uint256 amount = 1000;
+        uint256 FEE_PBS = 0;
+        uint256 expected = 0;
+        uint256 actual = abstractRouter.calculateFee(amount, FEE_PBS);
+        console.log("Expected: ", expected);
+        console.log("Actual: ", actual);
+        assertEq(abstractRouter.calculateFee(amount, FEE_PBS), 0);
     }
 }
