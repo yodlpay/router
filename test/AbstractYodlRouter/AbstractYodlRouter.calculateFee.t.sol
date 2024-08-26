@@ -32,8 +32,7 @@ contract YodlAbstractRouterTest is Test {
     /* 
     * Scenario: feeBps is 0
     */
-    function test_CalculateFee_FeePbsZero() public view {
-        uint256 amount = 1000;
+    function testFuzz_CalculateFee_FeePbsZero(uint256 amount) public view {
         uint256 feePbs = 0;
         assertEq(abstractRouter.calculateFee(amount, feePbs), 0);
     }
