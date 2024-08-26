@@ -12,6 +12,8 @@ contract TestableAbstractYodlRouter is AbstractYodlRouter {
     // constructor(string memory _version, address _yodlFeeTreasury, uint256 _yodlFeeBps, address _wrappedNativeToken)
 
     AbstractYodlRouter.PriceFeed public blankPriceFeed; // conenience var for testing purposes
+    bool private mockVerifyRateSignature;
+    bool private mockVerifyRateSignatureResult;
 
     constructor() AbstractYodlRouter() {
         // version = _version;
@@ -40,23 +42,35 @@ contract TestableAbstractYodlRouter is AbstractYodlRouter {
         return blankPriceFeed;
     }
 
-    function createUSDPriceFeed(
-        address feedAddress,
-        int8 feedType,
-        string memory currency,
-        uint256 amount,
-        uint256 deadline,
-        bytes memory signature
-    ) public pure returns (AbstractYodlRouter.PriceFeed memory) {
-        return AbstractYodlRouter.PriceFeed({
-            feedAddress: feedAddress,
-            feedType: feedType,
-            currency: currency,
-            amount: amount,
-            deadline: deadline,
-            signature: signature
-        });
+    function setMockVerifyRateSignature(bool _mock, bool _result) public {
+        mockVerifyRateSignature = _mock;
+        mockVerifyRateSignatureResult = _result;
     }
+
+    function verifyRateSignature(PriceFeed calldata priceFeed) public view override returns (bool) {
+        if (mockVerifyRateSignature) {
+            return mockVerifyRateSignatureResult;
+        }
+        return super.verifyRateSignature(priceFeed);
+    }
+
+    // function createUSDPriceFeed(
+    //     address feedAddress,
+    //     int8 feedType,
+    //     string memory currency,
+    //     uint256 amount,
+    //     uint256 deadline,
+    //     bytes memory signature
+    // ) public pure returns (AbstractYodlRouter.PriceFeed memory) {
+    //     return AbstractYodlRouter.PriceFeed({
+    //         feedAddress: feedAddress,
+    //         feedType: feedType,
+    //         currency: currency,
+    //         amount: amount,
+    //         deadline: deadline,
+    //         signature: signature
+    //     });
+    // }
 
     // Implement any abstract functions here if needed
 }
