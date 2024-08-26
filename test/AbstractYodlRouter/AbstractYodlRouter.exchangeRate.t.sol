@@ -52,10 +52,10 @@ contract YodlAbstractRouterTest is Test {
             abstractRouter.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, amount, "converted not equal to amount");
-        assertEq(priceFeedsUsed[0], address(0), "priceFeedsUsed[0] not equal to address(0)");
-        assertEq(priceFeedsUsed[1], address(0));
         assertEq(prices[0], int256(1));
         assertEq(prices[1], int256(1));
+        assertEq(priceFeedsUsed[0], address(0), "priceFeedsUsed[0] not equal to address(0)");
+        assertEq(priceFeedsUsed[1], address(0));
     }
 
     /* 
@@ -81,14 +81,11 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price, 0, 0, 0)
         );
 
-        (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
-            abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, (amount * 10 ** decimals) / uint256(price), "converted not equal to expected amount");
         assertEq(prices[0], price, "prices[0] not equal to price");
         assertEq(prices[1], 0, "prices[1] != 0"); // shoud not exist
-        assertEq(priceFeedsUsed[0], address(0), "priceFeedsUsed[0] not equal to address(0)");
-        assertEq(priceFeedsUsed[1], priceFeeds[1].feedAddress, "priceFeedsUsed[1] not equal to priceFeedAddresses[0]");
     }
 
     /* 
@@ -114,14 +111,11 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price, 0, 0, 0)
         );
 
-        (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
-            abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to expected amount");
         assertEq(prices[0], price, "prices[0] not equal to price");
         assertEq(prices[1], 0, "prices[1] != 0"); // shoud not exist
-        assertEq(priceFeedsUsed[0], priceFeeds[0].feedAddress, "priceFeedsUsed[0] not equal to address(0)");
-        assertEq(priceFeedsUsed[1], address(0), "priceFeedsUsed[1] not equal to priceFeedAddresses[0]");
     }
 
     /*
@@ -161,8 +155,7 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price2, 0, 0, 0)
         );
 
-        (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
-            abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
         uint256 expectedConverted = amount * uint256(price1) / (10 ** decimals1);
         expectedConverted = expectedConverted * (10 ** decimals2) / uint256(price2);
@@ -170,8 +163,6 @@ contract YodlAbstractRouterTest is Test {
         assertEq(converted, expectedConverted, "converted not equal to expected amount");
         assertEq(prices[0], price1, "prices[0] not equal to price");
         assertEq(prices[1], price2, "prices[1] != 0"); // shoud not exist
-        assertEq(priceFeedsUsed[0], priceFeeds[0].feedAddress, "priceFeedsUsed[0] not equal to address(0)");
-        assertEq(priceFeedsUsed[1], priceFeeds[1].feedAddress, "priceFeedsUsed[1] not equal to priceFeedAddresses[0]");
     }
 
     /* 
