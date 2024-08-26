@@ -34,11 +34,7 @@ contract YodlAbstractRouterTest is Test {
     */
     function test_CalculateFee_FeePbsZero() public view {
         uint256 amount = 1000;
-        uint256 FEE_PBS = 0;
-        uint256 expected = 0;
-        uint256 actual = abstractRouter.calculateFee(amount, FEE_PBS);
-        console.log("Expected: ", expected);
-        console.log("Actual: ", actual);
-        assertEq(abstractRouter.calculateFee(amount, FEE_PBS), 0);
+        uint256 feePbs = 0;
+        assertEq(abstractRouter.calculateFee(amount, feePbs), 0);
     }
 }

@@ -179,8 +179,8 @@ contract YodlAbstractRouterTest is Test {
     */
     function testFuzz_ExchangeRate_PricefeedDecimals() public {
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeed1, priceFeedBlank];
-        uint256 AMOUNT = 999;
-        int256 PRICE = 1_0657_0000; // the contract should return an int256
+        uint256 amount = 999;
+        int256 price = 1_0657_0000; // the contract should return an int256
 
         for (uint8 decimals = 6; decimals <= 18; decimals++) {
             vm.mockCall(
@@ -192,14 +192,14 @@ contract YodlAbstractRouterTest is Test {
             vm.mockCall(
                 priceFeeds[0].feedAddress,
                 abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-                abi.encode(0, PRICE, 0, 0, 0)
+                abi.encode(0, price, 0, 0, 0)
             );
 
             (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
-                abstractRouter.exchangeRate(priceFeeds, AMOUNT);
+                abstractRouter.exchangeRate(priceFeeds, amount);
 
-            assertEq(converted, AMOUNT * uint256(PRICE) / 10 ** decimals, "converted not equal to expected amount");
-            assertEq(prices[0], PRICE, "prices[0] not equal to price");
+            assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to expected amount");
+            assertEq(prices[0], price, "prices[0] not equal to price");
             assertEq(prices[1], 0, "prices[1] != 0"); // shoud not exist
             assertEq(priceFeedsUsed[0], priceFeeds[0].feedAddress, "priceFeedsUsed[0] not equal to address(0)");
             assertEq(priceFeedsUsed[1], address(0), "priceFeedsUsed[1] not equal to priceFeedAddresses[0]");
