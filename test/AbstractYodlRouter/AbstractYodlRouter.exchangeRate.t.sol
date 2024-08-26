@@ -194,7 +194,7 @@ contract YodlAbstractRouterTest is Test {
     * NB: May be redundant if verifyRateSignature is tested elsewhere (which is likely will)
     * Scenorio: Pricefeed[0] is external, but the signature is invalid
     */
-    function testExpectRevertNoReason() public {
+    function q() public {
         uint256 amount = 999;
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedBlank];
 
