@@ -58,27 +58,4 @@ contract YodlAbstractRouterTest is Test {
 
         assertEq((treasuryBalanceAfter - treasuryBalanceBefore), amount);
     }
-
-    // function test_Sweep(uint256 amount) public {
-    //         // Mint some tokens for the contract
-    //         token.mint(address(hiroRouterV1), amount);
-
-    //         // Try to sweep them to the treasuryAddress
-    //         hiroRouterV1.sweep(address(token));
-
-    //         // Ensure that they have successfully been transferred
-    //         assertEq(token.balanceOf(address(treasuryAddress)), amount);
-    //     }
 }
-
-//    function test_SweepAllowsOnlyOwnerFail() public {
-//         // Mint and transfer token to YodlRouter
-//         uint256 amount = 1 ether;
-//         token.mint(senderAddress, amount);
-//         vm.prank(senderAddress);
-//         token.transfer(address(hiroRouterV1), amount);
-
-//         vm.prank(senderAddress);
-//         vm.expectRevert("Ownable: caller is not the owner");
-//         hiroRouterV1.sweep(address(token));
-//     }
