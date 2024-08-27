@@ -2,16 +2,19 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import {TestableAbstractYodlRouter} from "./shared/TestableAbstractYodlRouter.t.sol";
+import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
 import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 
 contract YodlAbstractRouterTest is Test {
-    TestableAbstractYodlRouter abstractRouter;
+    AbstractYodlRouterHarness abstractRouter;
 
     function setUp() public {
-        abstractRouter = new TestableAbstractYodlRouter();
+        abstractRouter = new AbstractYodlRouterHarness();
     }
 
+    /* 
+    * Fuzz test prices when using external pricefeed
+    */
     function testFuzz_EmitConversionEvent_ExternalPricefeed(int256 price1, int256 price2) public {
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds =
             [abstractRouter.getPriceFeedExternal(), abstractRouter.getPriceFeedChainlink()];
@@ -26,6 +29,9 @@ contract YodlAbstractRouterTest is Test {
         abstractRouter.emitConversionEvent(priceFeeds, prices);
     }
 
+    /* 
+    * Fuzz test prices when using chainlink pricefeed
+    */
     function testFuzz_EmitConversionEvent_ChainlinkPricefeed(int256 price1, int256 price2) public {
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds =
             [abstractRouter.getPriceFeedChainlink(), abstractRouter.getPriceFeedExternal()];

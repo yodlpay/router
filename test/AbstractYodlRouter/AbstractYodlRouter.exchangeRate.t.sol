@@ -4,17 +4,17 @@ pragma solidity ^0.8.26;
 import "forge-std/Test.sol";
 import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
-import {TestableAbstractYodlRouter} from "./shared/TestableAbstractYodlRouter.t.sol";
+import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
 import {AggregatorV3Interface} from "chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 contract YodlAbstractRouterTest is Test {
-    TestableAbstractYodlRouter abstractRouter;
+    AbstractYodlRouterHarness abstractRouter;
     AbstractYodlRouter.PriceFeed priceFeedExternal;
     AbstractYodlRouter.PriceFeed priceFeedChainlink;
     AbstractYodlRouter.PriceFeed priceFeedZeroValues;
 
     function setUp() public {
-        abstractRouter = new TestableAbstractYodlRouter();
+        abstractRouter = new AbstractYodlRouterHarness();
         priceFeedChainlink = abstractRouter.getPriceFeedChainlink();
         priceFeedExternal = abstractRouter.getPriceFeedExternal();
     }

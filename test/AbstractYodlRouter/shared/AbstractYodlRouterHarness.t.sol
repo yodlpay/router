@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {AbstractYodlRouter} from "../../../src/AbstractYodlRouter.sol";
 import {IWETH9} from "@uniswap/v3-periphery/contracts/interfaces/external/IWETH9.sol";
 
-contract TestableAbstractYodlRouter is AbstractYodlRouter {
+contract AbstractYodlRouterHarness is AbstractYodlRouter {
     AbstractYodlRouter.PriceFeed public priceFeedChainlink;
     AbstractYodlRouter.PriceFeed public priceFeedExternal;
     bool private mockVerifyRateSignature;
@@ -47,6 +47,15 @@ contract TestableAbstractYodlRouter is AbstractYodlRouter {
 
     function getPriceFeedExternal() public view returns (AbstractYodlRouter.PriceFeed memory) {
         return priceFeedExternal;
+    }
+
+    /* Expose internal functions */
+
+    function exposed_transferFee(uint256 amount, uint256 feeBps, address token, address from, address to)
+        external
+        returns (uint256)
+    {
+        return transferFee(amount, feeBps, token, from, to);
     }
 
     /* Helpers to mock verifyRateSignature */

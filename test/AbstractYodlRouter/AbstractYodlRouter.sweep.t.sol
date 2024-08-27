@@ -4,15 +4,15 @@ pragma solidity ^0.8.26;
 import "forge-std/Test.sol";
 import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
-import {TestableAbstractYodlRouter} from "./shared/TestableAbstractYodlRouter.t.sol";
+import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
 import {IERC20} from "@openzeppelin/contracts//token/ERC20/IERC20.sol";
 import {MockERC20} from "./shared/MockUSDC.sol";
 
 contract YodlAbstractRouterTest is Test {
-    TestableAbstractYodlRouter abstractRouter;
+    AbstractYodlRouterHarness abstractRouter;
 
     function setUp() public {
-        abstractRouter = new TestableAbstractYodlRouter();
+        abstractRouter = new AbstractYodlRouterHarness();
     }
 
     /* 
