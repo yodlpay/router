@@ -15,29 +15,29 @@ contract YodlAbstractRouterTest is Test {
         abstractRouter = new TestableAbstractYodlRouter();
     }
 
-    /* 
-    * Scenario: Emits ConvertWithExternalRate with External Feed 
-    */
-    // function testFuzz_Sweep_Native(int256[2] memory prices) public {
-    // function testFuzz_EmitConversionEvent_ExternalPricefeed(int256[2] memory prices) public {
-    // function test_EmitConversionEvent_ExternalPricefeed() public {
-    //     AbstractYodlRouter.PriceFeed[2] memory priceFeeds;
-    //     int256[2] memory prices;
+    function testFuzz_EmitConversionEvent_ExternalPricefeed(int256 price1, int256 price2) public {
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds =
+            [abstractRouter.getPriceFeedExternal(), abstractRouter.getPriceFeedChainlink()];
+        int256[2] memory prices = [price1, price2];
 
-    //     // uint256 treasuryETHBalanceBefore = abstractRouter.yodlFeeTreasury().balance; // Get the treasury balance
-    //     // vm.deal(address(abstractRouter), amount); // Give the YodlRouter some eth
+        /* tell foundry which event event + params to expect */
+        vm.expectEmit(true, true, false, true);
+        emit AbstractYodlRouter.ConvertWithExternalRate(
+            priceFeeds[0].currency, priceFeeds[1].feedAddress, prices[0], prices[1]
+        );
 
-    //     // abstractRouter.sweep(abstractRouter.NATIVE_TOKEN()); // Sweep YodlRouter
-    //     // uint256 treasuryETHBalanceAfter = abstractRouter.yodlFeeTreasury().balance; // Get the new treasury balance
+        abstractRouter.emitConversionEvent(priceFeeds, prices);
+    }
 
-    //     // assertEq(treasuryETHBalanceAfter - treasuryETHBalanceBefore, amount); // Ensure that they have successfully been transferred
-    // }
+    function testFuzz_EmitConversionEvent_ChainlinkPricefeed(int256 price1, int256 price2) public {
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds =
+            [abstractRouter.getPriceFeedChainlink(), abstractRouter.getPriceFeedExternal()];
+        int256[2] memory prices = [price1, price2];
+
+        /* tell foundry which event event + params to expect */
+        vm.expectEmit(true, true, false, true);
+        emit AbstractYodlRouter.Convert(priceFeeds[0].feedAddress, priceFeeds[1].feedAddress, prices[0], prices[1]);
+
+        abstractRouter.emitConversionEvent(priceFeeds, prices);
+    }
 }
-
-//   function emitConversionEvent(PriceFeed[2] memory priceFeeds, int256[2] memory prices) public {
-//         if (priceFeeds[0].feedType == EXTERNAL_FEED) {
-//             emit ConvertWithExternalRate(priceFeeds[0].currency, priceFeeds[1].feedAddress, prices[0], prices[1]);
-//         } else {
-//             emit Convert(priceFeeds[0].feedAddress, priceFeeds[1].feedAddress, prices[0], prices[1]);
-//         }
-//     }
