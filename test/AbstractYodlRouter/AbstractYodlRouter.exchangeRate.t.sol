@@ -9,34 +9,14 @@ import {AggregatorV3Interface} from "chainlink/src/v0.8/shared/interfaces/Aggreg
 
 contract YodlAbstractRouterTest is Test {
     TestableAbstractYodlRouter abstractRouter;
-    address[2] priceFeedAddresses = [address(13480), address(13481)];
-    AbstractYodlRouter.PriceFeed priceFeedBlank;
-
-    /* 
-    * Redundant. Only need 0 address, feedType 1 and 2. 3 total. Create them in TestableAbstractYodlRouter? 
-    * serup like priceFeedBlank rename to reflect type (priceFeedType0, priceFeedType1 or priceFeedZERO).
-    */
-    AbstractYodlRouter.PriceFeed priceFeedChainlink = AbstractYodlRouter.PriceFeed({
-        feedAddress: priceFeedAddresses[0],
-        feedType: 1,
-        currency: "USD",
-        amount: 0,
-        deadline: 0,
-        signature: ""
-    });
-
-    AbstractYodlRouter.PriceFeed priceFeedExternal = AbstractYodlRouter.PriceFeed({ // rename to reflect currency
-        feedAddress: priceFeedAddresses[1],
-        feedType: 2,
-        currency: "USDT",
-        amount: 3,
-        deadline: 0,
-        signature: ""
-    });
+    AbstractYodlRouter.PriceFeed priceFeedExternal;
+    AbstractYodlRouter.PriceFeed priceFeedChainlink;
+    AbstractYodlRouter.PriceFeed priceFeedZeroValues;
 
     function setUp() public {
         abstractRouter = new TestableAbstractYodlRouter();
-        priceFeedBlank = abstractRouter.getPriceFeedZeroValues();
+        priceFeedChainlink = abstractRouter.getPriceFeedChainlink();
+        priceFeedExternal = abstractRouter.getPriceFeedExternal();
     }
 
     /* 
@@ -46,7 +26,7 @@ contract YodlAbstractRouterTest is Test {
     function testFuzz_ExchangeRate_NoPriceFeed(uint256 amount) public view {
         vm.assume(amount < 1e68); // amounts greater than this will have arithmetic overflow errors
 
-        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedBlank, priceFeedBlank];
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedZeroValues, priceFeedZeroValues];
 
         (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
             abstractRouter.exchangeRate(priceFeeds, amount);
@@ -63,7 +43,7 @@ contract YodlAbstractRouterTest is Test {
     */
     function testFuzz_ExchangeRate_OnlyPriceFeedTwo(uint256 amount) public {
         vm.assume(amount < 1e68); // prevent arithmetic overflow
-        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedBlank, priceFeedChainlink];
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedZeroValues, priceFeedChainlink];
 
         /* Prepare mock data */
         uint256 decimals = 8;
@@ -93,7 +73,7 @@ contract YodlAbstractRouterTest is Test {
     */
     function testFuzz_ExchangeRate_OnlyPriceFeedOne(uint256 amount) public {
         vm.assume(amount < 1e68); // prevent arithmetic overflow
-        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedChainlink, priceFeedBlank];
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedChainlink, priceFeedZeroValues];
 
         /* Prepare mock data */
         uint256 decimals = 8;
@@ -171,7 +151,7 @@ contract YodlAbstractRouterTest is Test {
     */
     function testFuzz_ExchangeRate_ExternalPricefeed(uint256 amount) public {
         vm.assume(amount < 1e68); // prevent arithmetic overflow
-        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedBlank];
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedZeroValues];
 
         abstractRouter.setMockVerifyRateSignature(true, true);
 
@@ -195,7 +175,7 @@ contract YodlAbstractRouterTest is Test {
     */
     function q() public {
         uint256 amount = 999;
-        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedBlank];
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedZeroValues];
 
         vm.expectRevert("Invalid signature for external price feed");
         abstractRouter.exchangeRate(priceFeeds, amount);
@@ -206,7 +186,7 @@ contract YodlAbstractRouterTest is Test {
     * Manual fuzzing as range is small.
     */
     function testFuzz_ExchangeRate_PricefeedDecimals() public {
-        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedChainlink, priceFeedBlank];
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedChainlink, priceFeedZeroValues];
         uint256 amount = 999;
 
         // manually fuzzing

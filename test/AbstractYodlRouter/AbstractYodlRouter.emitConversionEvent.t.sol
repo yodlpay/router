@@ -20,19 +20,18 @@ contract YodlAbstractRouterTest is Test {
     */
     // function testFuzz_Sweep_Native(int256[2] memory prices) public {
     // function testFuzz_EmitConversionEvent_ExternalPricefeed(int256[2] memory prices) public {
-    function test_EmitConversionEvent_ExternalPricefeed() public {
-        AbstractYodlRouter.PriceFeed[2] memory priceFeeds;
-        int256[2] memory prices;
+    // function test_EmitConversionEvent_ExternalPricefeed() public {
+    //     AbstractYodlRouter.PriceFeed[2] memory priceFeeds;
+    //     int256[2] memory prices;
 
+    //     // uint256 treasuryETHBalanceBefore = abstractRouter.yodlFeeTreasury().balance; // Get the treasury balance
+    //     // vm.deal(address(abstractRouter), amount); // Give the YodlRouter some eth
 
-        // uint256 treasuryETHBalanceBefore = abstractRouter.yodlFeeTreasury().balance; // Get the treasury balance
-        // vm.deal(address(abstractRouter), amount); // Give the YodlRouter some eth
+    //     // abstractRouter.sweep(abstractRouter.NATIVE_TOKEN()); // Sweep YodlRouter
+    //     // uint256 treasuryETHBalanceAfter = abstractRouter.yodlFeeTreasury().balance; // Get the new treasury balance
 
-        // abstractRouter.sweep(abstractRouter.NATIVE_TOKEN()); // Sweep YodlRouter
-        // uint256 treasuryETHBalanceAfter = abstractRouter.yodlFeeTreasury().balance; // Get the new treasury balance
-
-        // assertEq(treasuryETHBalanceAfter - treasuryETHBalanceBefore, amount); // Ensure that they have successfully been transferred
-    }
+    //     // assertEq(treasuryETHBalanceAfter - treasuryETHBalanceBefore, amount); // Ensure that they have successfully been transferred
+    // }
 }
 
 //   function emitConversionEvent(PriceFeed[2] memory priceFeeds, int256[2] memory prices) public {
