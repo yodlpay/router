@@ -10,26 +10,10 @@ import {MockERC20} from "./shared/MockUSDC.sol";
 
 contract YodlAbstractRouterTest is Test {
     TestableAbstractYodlRouter abstractRouter;
-    uint256 constant APPROX_MAX_AMOUNT = 1e68;
 
     function setUp() public {
         abstractRouter = new TestableAbstractYodlRouter();
     }
-
-    // /// @notice Transfers all fees or slippage collected by the router to the treasury address
-    // /// @param token The address of the token we want to transfer from the router
-    // function sweep(address token) external {
-    //     if (token == NATIVE_TOKEN) {
-    //         // transfer native token out of contract
-    //         (bool success,) = yodlFeeTreasury.call{value: address(this).balance}("");
-    //         require(success, "transfer failed in sweep");
-    //     } else {
-    //         // transfer ERC20 contract
-    //         TransferHelper.safeTransfer(token, yodlFeeTreasury, IERC20(token).balanceOf(address(this)));
-    //     }
-    // }
-
-    // create test for sweep function
 
     /* 
     * Scenario: Sweep native token
