@@ -12,17 +12,26 @@ contract YodlAbstractRouterTest is Test {
     function setUp() public {
         abstractRouter = new AbstractYodlRouterHarness();
     }
+    /* 
+    1. Check old code - not there
+    * fuzz amount, feeBps
+    * use native and non-native tokens
+    * test both reverts
+    * test send from contract and from user address
+    * check balances
+    */
 
     /* 
     * Scenario: fuzz testing amount and feeBps
     */
-    function testFuzz_TransferFee(uint256 amount, uint256 feeBps) public view {
-        // set up vars
-        // uint256 amount, uint256 feeBps, address token, address from, address to
+    // function testFuzz_TransferFee(uint256 amount, uint256 feeBps) public view {
+    //     // set up vars
+    //     // uint256 amount, uint256 feeBps, address token, address from, address to
+    //     address token = abstractRouter.NATIVE_TOKEN();
 
-        // make the call
-        // abstractRouter.exposed_transferFee(amount, feeBps, token, from, to);
-    }
+    //     // make the call
+    //     // abstractRouter.exposed_transferFee(amount, feeBps, token, from, to);
+    // }
 }
 
 //     /// @notice Calculates and transfers fee directly from an address to another
