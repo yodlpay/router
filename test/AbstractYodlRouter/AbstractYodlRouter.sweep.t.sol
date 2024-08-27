@@ -6,6 +6,7 @@ import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
 import {TestableAbstractYodlRouter} from "./shared/TestableAbstractYodlRouter.t.sol";
 import {IERC20} from "@openzeppelin/contracts//token/ERC20/IERC20.sol";
+import {MockERC20} from "./shared/MockUSDC.sol";
 
 contract YodlAbstractRouterTest is Test {
     TestableAbstractYodlRouter abstractRouter;
@@ -47,16 +48,15 @@ contract YodlAbstractRouterTest is Test {
     * Scenario: Sweep non-native token
     */
     function testFuzz_Sweep_Token(uint256 amount) public {
-        IERC20 tokenA = IERC20(address(0x12345));
-        deal(address(tokenA), address(abstractRouter), amount, true);
-        uint256 treasuryTokenBalanceBefore = tokenA.balanceOf(abstractRouter.yodlFeeTreasury()); // Get the treasury balance
-        console.log("treasuryTokenBalanceBefore: ", treasuryTokenBalanceBefore);
+        MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18); // Create a new token
 
-        // // Try to sweep them to the treasuryAddress
-        // abstractRouter.sweep(address(tokenA));
+        deal(address(tokenA), address(abstractRouter), amount, true); // Give the YodlRouter some tokens
+        uint256 treasuryBalanceBefore = tokenA.balanceOf(abstractRouter.yodlFeeTreasury()); // Get the treasury balance
 
-        // // Ensure that they have successfully been transferred
-        // assertEq(tokenA.balanceOf(abstractRouter.yodlFeeTreasury()), amount);
+        abstractRouter.sweep(address(tokenA)); // Sweep YodlRouter
+        uint256 treasuryBalanceAfter = tokenA.balanceOf(abstractRouter.yodlFeeTreasury()); // Get the treasury balance
+
+        assertEq((treasuryBalanceAfter - treasuryBalanceBefore), amount);
     }
 
     // function test_Sweep(uint256 amount) public {
