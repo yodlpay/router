@@ -179,8 +179,7 @@ contract YodlAbstractRouterTest is Test {
         // Mock the verifyRateSignature to return true
         // vm.mockCall(
         //     address(abstractRouter),
-        //     // abi.encodeWithSelector(AbstractYodlRouter.verifyRateSignature.selector, abi.encode(priceFeeds[0])),
-        //     abi.encodeWithSelector(AbstractYodlRouter.verifyRateSignature.selector),
+        //     abi.encodeWithSelector(AbstractYodlRouter.verifyRateSignature.selector), // works in minimal test
         //     abi.encode(true)
         // );
 

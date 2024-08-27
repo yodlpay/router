@@ -20,7 +20,7 @@ contract TestableAbstractYodlRouter is AbstractYodlRouter {
         // yodlFeeTreasury = _yodlFeeTreasury;
         // yodlFeeBps = _yodlFeeBps;
         // wrappedNativeToken = IWETH9(_wrappedNativeToken);
-        /* Value from ArbitrumOneYodlRouter.sol in old code*/
+        /* Value from Arbiyrum miannet?*/
         version = "vSam";
         yodlFeeBps = 20;
         yodlFeeTreasury = 0x5f0947253a8218894af13438ac2e2E0CeD30d234;
