@@ -4,30 +4,43 @@ pragma solidity ^0.8.26;
 import "forge-std/Test.sol";
 
 import {AbstractYodlRouter} from "../../../src/AbstractYodlRouter.sol";
-import "../../../lib/v3-periphery/contracts/interfaces/external/IWETH9.sol";
-
-// Hardcode or pass constructor arguments??
+import {IWETH9} from "@uniswap/v3-periphery/contracts/interfaces/external/IWETH9.sol";
 
 contract TestableAbstractYodlRouter is AbstractYodlRouter {
-    // constructor(string memory _version, address _yodlFeeTreasury, uint256 _yodlFeeBps, address _wrappedNativeToken)
-
-    AbstractYodlRouter.PriceFeed public blankPriceFeed; // conenience var for testing purposes
+    address[2] priceFeedAddresses = [address(13480), address(13481)];
+    AbstractYodlRouter.PriceFeed public priceFeedChainlink;
+    AbstractYodlRouter.PriceFeed public priceFeedExternal;
+    AbstractYodlRouter.PriceFeed public priceFeedZeroValues; // Represents no pricefeed passed
     bool private mockVerifyRateSignature;
     bool private mockVerifyRateSignatureResult;
 
     constructor() AbstractYodlRouter() {
-        // version = _version;
-        // yodlFeeTreasury = _yodlFeeTreasury;
-        // yodlFeeBps = _yodlFeeBps;
-        // wrappedNativeToken = IWETH9(_wrappedNativeToken);
-        /* Value from Arbiyrum miannet?*/
         version = "vSam";
         yodlFeeBps = 20;
+
+        /* Values from Arbitrum miannet?*/
         yodlFeeTreasury = 0x5f0947253a8218894af13438ac2e2E0CeD30d234;
         wrappedNativeToken = IWETH9(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
 
-        /* Assign '0' values to blankPriceFeed */
-        blankPriceFeed = AbstractYodlRouter.PriceFeed({
+        priceFeedChainlink = AbstractYodlRouter.PriceFeed({
+            feedAddress: priceFeedAddresses[0],
+            feedType: 1,
+            currency: "USDC",
+            amount: 0,
+            deadline: 0,
+            signature: ""
+        });
+
+        priceFeedExternal = AbstractYodlRouter.PriceFeed({
+            feedAddress: priceFeedAddresses[1],
+            feedType: 2,
+            currency: "USDT",
+            amount: 3,
+            deadline: 0,
+            signature: ""
+        });
+
+        priceFeedZeroValues = AbstractYodlRouter.PriceFeed({
             feedAddress: address(0),
             feedType: 0,
             currency: "",
@@ -37,10 +50,21 @@ contract TestableAbstractYodlRouter is AbstractYodlRouter {
         });
     }
 
-    // Add a function to get the blankPriceFeed as a struct
-    function getBlankPriceFeed() public view returns (AbstractYodlRouter.PriceFeed memory) {
-        return blankPriceFeed;
+    /* Add functions to get the pricefeeds as a structs */
+
+    function getPriceFeedChainlink() public view returns (AbstractYodlRouter.PriceFeed memory) {
+        return priceFeedChainlink;
     }
+
+    function getPriceFeedExternal() public view returns (AbstractYodlRouter.PriceFeed memory) {
+        return priceFeedExternal;
+    }
+
+    function getPriceFeedZeroValues() public view returns (AbstractYodlRouter.PriceFeed memory) {
+        return priceFeedZeroValues;
+    }
+
+    /* Helpers to mock verifyRateSignature */
 
     function setMockVerifyRateSignature(bool _mock, bool _result) public {
         mockVerifyRateSignature = _mock;
@@ -71,6 +95,4 @@ contract TestableAbstractYodlRouter is AbstractYodlRouter {
     //         signature: signature
     //     });
     // }
-
-    // Implement any abstract functions here if needed
 }

@@ -36,7 +36,7 @@ contract YodlAbstractRouterTest is Test {
 
     function setUp() public {
         abstractRouter = new TestableAbstractYodlRouter();
-        priceFeedBlank = abstractRouter.getBlankPriceFeed();
+        priceFeedBlank = abstractRouter.getPriceFeedZeroValues();
     }
 
     /* 
