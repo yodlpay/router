@@ -241,7 +241,7 @@ abstract contract AbstractYodlRouter {
         }
     }
 
-    function verifyRateSignature(PriceFeed calldata priceFeed) public view returns (bool) {
+    function verifyRateSignature(PriceFeed calldata priceFeed) public view virtual returns (bool) {
         bytes32 messageHash = keccak256(abi.encodePacked(priceFeed.currency, priceFeed.amount, priceFeed.deadline));
         bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
 
