@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
+import {MockERC20} from "./shared/MockUSDC.sol";
 
 contract YodlAbstractRouterTest is Test {
     AbstractYodlRouterHarness abstractRouter;
@@ -12,18 +13,54 @@ contract YodlAbstractRouterTest is Test {
     function setUp() public {
         abstractRouter = new AbstractYodlRouterHarness();
     }
+
+    // Cases:
+    // 1. mock fee < 0 should return 0 (done)
+    // 2. non-native token, from address(this) should safeTransfer (check balances)
+    // 3. non-native token, from != address(this) should safeTransferFrom (check balances)
+    // 4. native token, from address(this) should call{value: fee} (check balances) and not revert
+    // 5. native token, from != address(this) should revert
+    // 6. (maybe) non-native token, from != address(this) should revert
+    // NB fee should be returned in all success cases
     /* 
-    1. Check old code - not there
-    * fuzz amount, feeBps
-    * use native and non-native tokens
-    * test both reverts
-    * test send from contract and from user address
-    * check balances
-    */
+    
 
     /* 
-    * Scenario: fuzz testing amount and feeBps
+    * Scenario: calculated fee is less than 0. Should return 0.
     */
+    function test_TransferFee_CalculatedFeeIsZero() public {
+        /* NB: 100 * 10 / 10_000 == 0.01 - calculateFee will return 0 */
+        uint256 amount = 100;
+        uint256 feeBps = 10; // 0.1%
+        // address token = abstractRouter.NATIVE_TOKEN(); // could be any in this case
+        address token = abstractRouter.NATIVE_TOKEN(); // could be any in this case
+        address from = address(this); // any
+        address to = address(0xdead); // any
+
+        uint256 res = abstractRouter.exposed_transferFee(amount, feeBps, token, from, to);
+        assertEq(res, 0);
+    }
+
+    /* 
+    * Scenario: Non-native token, from address(this) should safeTransfer (check balances)
+    */
+    function test_TransferFee_NonNativeTokenFromContract() public {
+        uint256 amount = 200;
+        uint256 feeBps = 200; // 2%
+        address from = address(abstractRouter);
+        address to = address(0xdead); // any
+        MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18); // Create a new token
+
+        deal(address(tokenA), address(abstractRouter), 1000, true); // Give the YodlRouter some tokens
+        uint256 userBalanceBefore = tokenA.balanceOf(to); // Get the user (to) balance
+
+        uint256 fee = abstractRouter.exposed_transferFee(amount, feeBps, address(tokenA), from, to);
+        uint256 userBalanceAfter = tokenA.balanceOf(to); // Get the user balance again
+
+        assertEq(fee, 4);
+        assertEq(userBalanceAfter, userBalanceBefore + fee);
+    }
+
     // function testFuzz_TransferFee(uint256 amount, uint256 feeBps) public view {
     //     // set up vars
     //     // uint256 amount, uint256 feeBps, address token, address from, address to
