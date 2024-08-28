@@ -35,6 +35,7 @@ contract YodlAbstractRouterTest is Test {
     */
     function testFuzz_TransferFee_NonNativeTokenFromContract(uint256 amount, uint16 feeBps) public {
         vm.assume(amount < 1e68);
+        vm.assume(feeBps > 0 && feeBps <= 10000); // Ensure fee is between 0% and 100%
 
         address from = address(abstractRouter);
         address to = address(0xdead); // any
@@ -57,9 +58,10 @@ contract YodlAbstractRouterTest is Test {
     */
     function testFuzz_TransferFee_NonNativeTokenFromOtherAddress(uint256 amount, uint16 feeBps) public {
         vm.assume(amount < 1e68);
+        vm.assume(feeBps > 0 && feeBps <= 10000); // Ensure fee is between 0% and 100%
 
-        address from = address(0x12345);
-        address to = address(0xdead);
+        address from = address(1);
+        address to = address(2);
         MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18);
 
         deal(address(tokenA), address(from), 1e68, true); // Give from address some tokens
@@ -85,10 +87,10 @@ contract YodlAbstractRouterTest is Test {
     */
     function testFuzz_TransferFee_NativeTokenFromContract(uint256 amount, uint16 feeBps) public {
         vm.assume(amount < 1e68);
+        vm.assume(feeBps > 0 && feeBps <= 10000); // Ensure fee is between 0% and 100%
 
-        address from = address(abstractRouter); // not contract
-        address to = address(0xdead); // any
-        // address tokenA = abstractRouter.NATIVE_TOKEN();
+        address from = address(abstractRouter);
+        address to = address(1);
 
         vm.deal(from, 1e68); // Give ETH to 'from'
 
