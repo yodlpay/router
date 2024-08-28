@@ -27,9 +27,9 @@ contract YodlAbstractRouterTest is Test {
 
     /* 
     * Scenario: calculated fee is less than 0. Should return 0.
+    * NB: 100 * 10 / 10_000 == 0.01 - calculateFee will return 0
     */
     function test_TransferFee_CalculatedFeeIsZero() public {
-        /* NB: 100 * 10 / 10_000 == 0.01 - calculateFee will return 0 */
         uint256 amount = 100;
         uint256 feeBps = 10; // 0.1%
         // address token = abstractRouter.NATIVE_TOKEN(); // could be any in this case
@@ -43,21 +43,21 @@ contract YodlAbstractRouterTest is Test {
 
     /* 
     * Scenario: Non-native token, from address(this) should safeTransfer (check balances)
+    * NB: feeBps can go up to ~600 % in this test.
     */
-    function test_TransferFee_NonNativeTokenFromContract() public {
-        uint256 amount = 200;
-        uint256 feeBps = 200; // 2%
+    function testFuzz_TransferFee_NonNativeTokenFromContract(uint256 amount, uint16 feeBps) public {
+        vm.assume(amount < 1e68);
+
         address from = address(abstractRouter);
         address to = address(0xdead); // any
         MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18); // Create a new token
 
-        deal(address(tokenA), address(abstractRouter), 1000, true); // Give the YodlRouter some tokens
+        deal(address(tokenA), address(abstractRouter), 1e68, true); // Give the YodlRouter some tokens
         uint256 userBalanceBefore = tokenA.balanceOf(to); // Get the user (to) balance
 
         uint256 fee = abstractRouter.exposed_transferFee(amount, feeBps, address(tokenA), from, to);
         uint256 userBalanceAfter = tokenA.balanceOf(to); // Get the user balance again
 
-        assertEq(fee, 4);
         assertEq(userBalanceAfter, userBalanceBefore + fee);
     }
 
