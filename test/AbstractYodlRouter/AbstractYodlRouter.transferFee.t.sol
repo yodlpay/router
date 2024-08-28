@@ -93,9 +93,33 @@ contract YodlAbstractRouterTest is Test {
 
     /* 
     * Scenario: Non-native token, from address(this) should safeTransfer (check balances)
+    */
+    function testFuzz_TransferFee_NativeTokenFromContract(uint256 amount, uint16 feeBps) public {
+        vm.assume(amount < 1e68);
+
+        address from = address(abstractRouter); // not contract
+        address to = address(0xdead); // any
+        // address tokenA = abstractRouter.NATIVE_TOKEN();
+
+        vm.deal(from, 1e68); // Give ETH to 'from'
+
+        uint256 fromBalanceBefore = from.balance;
+        uint256 toBalanceBefore = to.balance;
+
+        uint256 fee = abstractRouter.exposed_transferFee(amount, feeBps, abstractRouter.NATIVE_TOKEN(), from, to);
+
+        uint256 fromBalanceAfter = from.balance;
+        uint256 toBalanceAfter = to.balance;
+
+        assertEq(fromBalanceAfter, fromBalanceBefore - fee);
+        assertEq(toBalanceAfter, toBalanceBefore + fee);
+    }
+
+    /* 
+    * Scenario: Non-native token, from address(this) should safeTransfer (check balances)
     * Shold revert
     */
-    function testFuzz_TransferFee_NativeTokenFromOtherAddress() public {
+    function test_TransferFee_NativeTokenFromOtherAddress() public {
         /* Make sure fee is > 0, otherwise it will return 0 */
         uint256 amount = 110;
         uint16 feeBps = 200;
