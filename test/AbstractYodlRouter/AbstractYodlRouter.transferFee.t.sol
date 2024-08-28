@@ -22,8 +22,8 @@ contract YodlAbstractRouterTest is Test {
         uint256 amount = 100;
         uint256 feeBps = 10; // 0.1%
         address token = abstractRouter.NATIVE_TOKEN(); // any
-        address from = address(this); // any
-        address to = address(0xdead); // any
+        address from = address(1); // any
+        address to = address(2); // any
 
         uint256 fee = abstractRouter.exposed_transferFee(amount, feeBps, token, from, to);
         assertEq(fee, 0);
@@ -31,14 +31,13 @@ contract YodlAbstractRouterTest is Test {
 
     /* 
     * Scenario: Non-native token, from YodlRouter. Should tranfer fee from --> to
-    * NB: feeBps can go to +600 % in this test.
     */
     function testFuzz_TransferFee_NonNativeTokenFromContract(uint256 amount, uint16 feeBps) public {
         vm.assume(amount < 1e68);
         vm.assume(feeBps > 0 && feeBps <= 10000); // Ensure fee is between 0% and 100%
 
         address from = address(abstractRouter);
-        address to = address(0xdead); // any
+        address to = address(1);
         MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18);
 
         deal(address(tokenA), address(abstractRouter), 1e68, true); // Give the YodlRouter some tokens
@@ -66,7 +65,7 @@ contract YodlAbstractRouterTest is Test {
 
         deal(address(tokenA), address(from), 1e68, true); // Give from address some tokens
 
-        /* Approve tokenA spend on behalf of from */
+        /* Approve tokenA spend on behalf of 'from' */
         vm.prank(from);
         tokenA.approve(address(abstractRouter), type(uint256).max);
 
@@ -111,11 +110,11 @@ contract YodlAbstractRouterTest is Test {
     */
     function test_TransferFee_NativeTokenFromOtherAddress() public {
         /* Make sure fee is > 0, otherwise it will return 0 */
-        uint256 amount = 110;
+        uint256 amount = 1000;
         uint16 feeBps = 200;
 
-        address from = address(0x12345); // not contract
-        address to = address(0xdead); // any
+        address from = address(1);
+        address to = address(2);
         address tokenA = abstractRouter.NATIVE_TOKEN();
 
         vm.deal(from, 1e68); // Give ETH to 'from'
