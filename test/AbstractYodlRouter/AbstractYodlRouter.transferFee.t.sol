@@ -73,17 +73,19 @@ contract YodlAbstractRouterTest is Test {
         address to = address(0xdead); // any
         MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18); // Create a new token
 
+        deal(address(tokenA), address(from), 1e68, true); // Give from address some tokens
+
         /* Approve tokenA spend on behalf of from */
         vm.prank(from);
         tokenA.approve(address(abstractRouter), type(uint256).max);
 
-        deal(address(tokenA), address(from), 1e68, true); // Give from address some tokens
-        uint256 fromBalanceBefore = tokenA.balanceOf(from); 
-        uint256 toBalanceBefore = tokenA.balanceOf(to); 
+        uint256 fromBalanceBefore = tokenA.balanceOf(from);
+        uint256 toBalanceBefore = tokenA.balanceOf(to);
 
         uint256 fee = abstractRouter.exposed_transferFee(amount, feeBps, address(tokenA), from, to);
-        uint256 fromBalanceAfter = tokenA.balanceOf(from); 
-        uint256 toBalanceAfter = tokenA.balanceOf(to); 
+
+        uint256 fromBalanceAfter = tokenA.balanceOf(from);
+        uint256 toBalanceAfter = tokenA.balanceOf(to);
 
         assertEq(fromBalanceAfter, fromBalanceBefore - fee);
         assertEq(toBalanceAfter, toBalanceBefore + fee);
@@ -91,23 +93,30 @@ contract YodlAbstractRouterTest is Test {
 
     /* 
     * Scenario: Non-native token, from address(this) should safeTransfer (check balances)
-    * NB: feeBps can go up to ~600 % in this test.
+    * Shold revert
     */
-    function testFuzz_TransferFee_NativeTokenFromOtherAddress(uint256 amount, uint16 feeBps) public {
-        vm.assume(amount < 1e68);
+    function testFuzz_TransferFee_NativeTokenFromOtherAddress() public {
+        /* Make sure fee is > 0, otherwise it will return 0 */
+        uint256 amount = 110;
+        uint16 feeBps = 200;
 
-        address from = address(0x12345); // any
+        address from = address(0x12345); // not contract
         address to = address(0xdead); // any
-        MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18); // Create a new token
+        address tokenA = abstractRouter.NATIVE_TOKEN();
 
-        deal(address(tokenA), address(from), 1e68, true); // Give the YodlRouter some tokens
-        uint256 userBalanceBefore = tokenA.balanceOf(to); // Get the user (to) balance
+        vm.deal(from, 1e68); // Give ETH to 'from'
 
-        // vm.expectRevert("can only transfer eth from the router address");
-        abstractRouter.exposed_transferFee(amount, feeBps, address(tokenA), from, to);
-        uint256 userBalanceAfter = tokenA.balanceOf(to); // Get the user balance again
+        uint256 fromBalanceBefore = from.balance;
+        uint256 toBalanceBefore = to.balance;
 
-        assertEq(userBalanceAfter, userBalanceBefore);
+        vm.expectRevert("can only transfer eth from the router address");
+        abstractRouter.exposed_transferFee(amount, feeBps, tokenA, from, to);
+
+        uint256 fromBalanceAfter = from.balance;
+        uint256 toBalanceAfter = to.balance;
+
+        assertEq(fromBalanceAfter, fromBalanceBefore, "From balance should not change");
+        assertEq(toBalanceAfter, toBalanceBefore, "To balance should not change");
     }
 }
 
