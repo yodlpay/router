@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
@@ -8,45 +8,87 @@ import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.so
 
 contract YodlAbstractRouterTest is Test {
     AbstractYodlRouterHarness abstractRouter;
+    address constant MOCK_WETH = address(0x1);
+    address constant MOCK_SIGNER = address(0x2);
 
     function setUp() public {
         abstractRouter = new AbstractYodlRouterHarness();
+        vm.etch(abstractRouter.RATE_VERIFIER(), hex"1234"); // Mock the RATE_VERIFIER contract
     }
 
-    /* 
-    * Scenario: 
-    */
-    function test_SplitSignature(uint256 amount, uint256 feeBps) public view {}
+    function test_VerifyRateSignature() public view {
+        /* Create a valid signature */
+        string memory currency = "USD";
+        uint256 amount = 1000;
+        uint256 deadline = block.timestamp + 1 hours;
 
-    // wtite test functions for each of ythe three below functions
+        bytes32 messageHash = keccak256(abi.encodePacked(currency, amount, deadline));
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
 
-    
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, ethSignedMessageHash);
+        bytes memory signatureCorrect = abi.encodePacked(r, s, v);
+
+        /* Use signature in price feed */
+        AbstractYodlRouter.PriceFeed memory priceFeed = AbstractYodlRouter.PriceFeed({
+            feedAddress: address(12345),
+            feedType: 2, // EXTERNAL_FEED
+            currency: currency,
+            amount: amount,
+            deadline: deadline,
+            signature: signatureCorrect
+        });
+
+        bool result1 = abstractRouter.verifyRateSignature(priceFeed);
+        assertTrue(result1, "Signature verification should pass");
+
+        // test with wronmg priv key
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(2, ethSignedMessageHash); // using incorrect private key
+        bytes memory signatureInCorrect = abi.encodePacked(r2, s2, v2);
+        priceFeed.signature = signatureInCorrect;
+        bool result2 = abstractRouter.verifyRateSignature(priceFeed);
+        assertFalse(result2, "Signature verification should fail");
+
+        /* Test with expired deadline */
+        priceFeed.signature = signatureCorrect; // revert to correct priv key
+        priceFeed.deadline = block.timestamp - 1; // set deadline in the past
+        result1 = abstractRouter.verifyRateSignature(priceFeed);
+        assertFalse(result1, "Signature verification should fail with expired deadline");
+    }
+
+    // function testRecoverSigner() public {
+    //     // This function is private, so we'll test it indirectly through verifyRateSignature
+    //     // The test logic is similar to testVerifyRateSignature
+    // }
+
+    // function testSplitSignature() public {
+    //     // This function is private, so we'll test it indirectly through verifyRateSignature
+    //     // We can test different signature lengths here
+
+    //     string memory currency = "USD";
+    //     uint256 amount = 1000;
+    //     uint256 deadline = block.timestamp + 1 hours;
+
+    //     bytes32 messageHash = keccak256(abi.encodePacked(currency, amount, deadline));
+    //     bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+
+    //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, ethSignedMessageHash);
+
+    //     // Valid signature length
+    //     bytes memory validSignature = abi.encodePacked(r, s, v);
+    //     assertTrue(validSignature.length == 65, "Valid signature should be 65 bytes long");
+
+    //     // Invalid signature length
+    //     bytes memory invalidSignature = abi.encodePacked(r, s);
+    //     vm.expectRevert("invalid signature length");
+    //     abstractRouter.verifyRateSignature(
+    //         AbstractYodlRouter.PriceFeed({
+    //             feedAddress: address(0),
+    //             feedType: 2,
+    //             currency: currency,
+    //             amount: amount,
+    //             deadline: deadline,
+    //             signature: invalidSignature
+    //         })
+    //     );
+    // }
 }
-
-// function verifyRateSignature(PriceFeed calldata priceFeed) public view virtual returns (bool) {
-//     bytes32 messageHash = keccak256(abi.encodePacked(priceFeed.currency, priceFeed.amount, priceFeed.deadline));
-//     bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
-
-//     if (priceFeed.deadline < block.timestamp) {
-//         return false;
-//     }
-//     return recoverSigner(ethSignedMessageHash, priceFeed.signature) == RATE_VERIFIER;
-// }
-
-// function recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _signature) private pure returns (address) {
-//     (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
-
-//     return ecrecover(_ethSignedMessageHash, v, r, s);
-// }
-
-// function splitSignature(bytes memory sig) private pure returns (bytes32 r, bytes32 s, uint8 v) {
-//     require(sig.length == 65, "invalid signature length");
-
-//     assembly {
-//         r := mload(add(sig, 32))
-//         s := mload(add(sig, 64))
-//         v := byte(0, mload(add(sig, 96)))
-//     }
-
-//     return (r, s, v);
-// }
