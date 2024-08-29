@@ -8,11 +8,9 @@ import {YodlUniswapRouter} from "@src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouterHarness} from "@test/AbstractYodlRouter/shared/AbstractYodlRouterHarness.t.sol";
 
 contract YodlUniswapRouterHarness is YodlUniswapRouter, AbstractYodlRouterHarness {
-    constructor(address _uniswapRouter) YodlUniswapRouter(_uniswapRouter) AbstractYodlRouterHarness() {
-        // Additional initialization if needed
-    }
+    constructor(address _uniswapRouter) YodlUniswapRouter(_uniswapRouter) AbstractYodlRouterHarness() {}
 
-    // Expose internal functions for testing
+    /* Expose internal functions for testing */
     function exposed_decodeTokenOutTokenInUniswap(bytes memory path, SwapType swapType)
         external
         pure
@@ -25,18 +23,7 @@ contract YodlUniswapRouterHarness is YodlUniswapRouter, AbstractYodlRouterHarnes
         return decodeSinglePoolFee(path);
     }
 
-    // Mock the Uniswap router for testing
-    function setMockUniswapRouter(address _mockRouter) external {
-        uniswapRouter = ISwapRouter02(_mockRouter);
-    }
-
-    // Helper function to simulate a swap (to be implemented in your test file)
-    function simulateSwap(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut) external {
-        // Implementation depends on how you want to mock the swap
-        // This could involve transferring tokens, updating balances, etc.
-    }
-
-    // Override verifyRateSignature to resolve diamond inheritance
+    /* Override verifyRateSignature to resolve diamond inheritance */
     function verifyRateSignature(PriceFeed calldata priceFeed)
         public
         view
@@ -45,6 +32,4 @@ contract YodlUniswapRouterHarness is YodlUniswapRouter, AbstractYodlRouterHarnes
     {
         return AbstractYodlRouterHarness.verifyRateSignature(priceFeed);
     }
-
-    // Add any other helper functions or state variables needed for testing
 }

@@ -3,7 +3,6 @@ pragma solidity ^0.8.26;
 
 import {ISwapRouter02} from "@uniswap/swap-router-contracts/interfaces/ISwapRouter02.sol";
 import {IV3SwapRouter} from "@uniswap/swap-router-contracts/interfaces/IV3SwapRouter.sol";
-
 import {AggregatorV3Interface} from "chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {Test, console} from "forge-std/Test.sol";
 
@@ -18,16 +17,11 @@ contract YodlUniswapRouterTest is Test {
     MockERC20 public tokenA;
     MockERC20 public tokenB;
     MockERC20 public tokenBase;
-    address treasuryAddress;
-    address senderAddress;
     address extraFeeAddress;
-    uint256 baseFeeBps;
     bytes32 defaultMemo;
     uint24 poolFee;
     uint256 amountIn;
     uint256 amountOut;
-    // YodlUniswapRouter.YodlUniswapParams singleParams;
-    YodlUniswapRouter.YodlUniswapParams multiParams;
     address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
     AbstractYodlRouter.PriceFeed priceFeedChainlink;
@@ -39,8 +33,6 @@ contract YodlUniswapRouterTest is Test {
 
     function setUp() public {
         harnessRouter = new YodlUniswapRouterHarness(uniswapRouterAddress);
-        baseFeeBps = 25;
-        treasuryAddress = address(123);
         extraFeeAddress = address(0);
         defaultMemo = "hi";
         tokenA = new MockERC20("Token A", "TKA", 18);
@@ -55,10 +47,12 @@ contract YodlUniswapRouterTest is Test {
         priceFeedChainlink = harnessRouter.getPriceFeedChainlink();
         priceFeedExternal = harnessRouter.getPriceFeedExternal();
 
-        // Fund the sender with some tokens
+        /* Fund the sender with some tokens */
         tokenA.mint(SENDER, 1000 ether);
         vm.prank(SENDER);
         tokenA.approve(address(harnessRouter), type(uint256).max);
+
+        /* Mocks for calling yodlWithUniswap */
 
         vm.mockCall(
             priceFeedChainlink.feedAddress,
@@ -73,7 +67,13 @@ contract YodlUniswapRouterTest is Test {
         );
     }
 
-    function createParams(bool isSingleHop) internal view returns (YodlUniswapRouter.YodlUniswapParams memory) {
+    /* Helper functions */
+
+    function createYodlUniswapParams(bool isSingleHop)
+        internal
+        view
+        returns (YodlUniswapRouter.YodlUniswapParams memory)
+    {
         bytes memory path;
         YodlUniswapRouter.SwapType swapType;
 
@@ -101,6 +101,8 @@ contract YodlUniswapRouterTest is Test {
         });
     }
 
+    /* Test functions */
+
     function test_yodlWithUniswap_SingleHop() public {
         vm.mockCall(
             uniswapRouterAddress, abi.encodeWithSelector(IV3SwapRouter.exactOutputSingle.selector), abi.encode(amountIn)
@@ -108,7 +110,7 @@ contract YodlUniswapRouterTest is Test {
 
         uint256 senderBalanceBefore = tokenA.balanceOf(SENDER);
 
-        YodlUniswapRouter.YodlUniswapParams memory singleParams = createParams(true);
+        YodlUniswapRouter.YodlUniswapParams memory singleParams = createYodlUniswapParams(true);
 
         vm.prank(SENDER, SENDER);
         uint256 amountSpent = harnessRouter.yodlWithUniswap(singleParams);
