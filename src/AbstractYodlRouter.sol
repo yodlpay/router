@@ -106,13 +106,12 @@ abstract contract AbstractYodlRouter {
      * @param priceFeeds Array of PriceFeeds, either Chainlink or external
      * @param amount Amount to be converted by the price feed exchange rates
      * @return converted The amount after conversion
-     * @return priceFeedsUsed The price feeds in the order they were used
      * @return prices The exchange rates from the price feeds
      */
     function exchangeRate(PriceFeed[2] calldata priceFeeds, uint256 amount)
         public
         view
-        returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
+        returns (uint256 converted, int256[2] memory prices)
     {
         bool shouldInverse;
 
@@ -122,7 +121,7 @@ abstract contract AbstractYodlRouter {
         if (priceFeeds[0].feedType == NULL_FEED) {
             // Inverse the price feed. invoiceCurrency: USD, settlementCurrency: CHF
             if (priceFeeds[1].feedType == NULL_FEED) {
-                return (amount, [address(0), address(0)], [int256(1), int256(1)]);
+                return (amount, [int256(1), int256(1)]);
             } else {
                 shouldInverse = true;
                 priceFeedOne = AggregatorV3Interface(priceFeeds[1].feedAddress);
@@ -168,7 +167,7 @@ abstract contract AbstractYodlRouter {
             prices[1] = price;
             converted = (converted * decimals) / uint256(price);
         }
-        return (converted, [priceFeeds[0].feedAddress, priceFeeds[1].feedAddress], prices);
+        return (converted, prices);
     }
 
     function emitConversionEvent(PriceFeed[2] memory priceFeeds, int256[2] memory prices) public {

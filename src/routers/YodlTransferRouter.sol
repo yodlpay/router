@@ -82,8 +82,7 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         if (params.priceFeeds[0].feedType != NULL_FEED || params.priceFeeds[1].feedType != NULL_FEED) {
             {
                 int256[2] memory prices;
-                address[2] memory priceFeedsUsed;
-                (outAmountGross, priceFeedsUsed, prices) = exchangeRate(params.priceFeeds, params.amount);
+                (outAmountGross, prices) = exchangeRate(params.priceFeeds, params.amount);
                 emitConversionEvent(params.priceFeeds, prices);
             }
         }

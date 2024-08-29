@@ -51,8 +51,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
         if (params.priceFeeds[0].feedType != NULL_FEED || params.priceFeeds[1].feedType != NULL_FEED) {
             // Convert amountOut from invoice currency to swap currency using price feed
             int256[2] memory prices;
-            address[2] memory priceFeeds;
-            (outAmountGross, priceFeeds, prices) = exchangeRate(params.priceFeeds, params.amountOut);
+            (outAmountGross, prices) = exchangeRate(params.priceFeeds, params.amountOut);
             emitConversionEvent(params.priceFeeds, prices);
         } else {
             outAmountGross = params.amountOut;
