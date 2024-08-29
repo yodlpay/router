@@ -14,7 +14,7 @@ contract MockERC20 is ERC20, Ownable {
         Ownable(msg.sender)
     {
         decimal = _decimals;
-        _initial_supply = 10 ** 12 * (10 ** _decimals); // 1e12
+        _initial_supply = 10 ** 12 * (10 ** _decimals);
     }
 
     function mint(address to, uint256 amount) public onlyOwner {

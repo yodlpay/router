@@ -75,7 +75,7 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
     // }
 
     /* Override verifyRateSignature and re-implement nested functions */
-    function verifyRateSignature(PriceFeed calldata priceFeed) public view override returns (bool) {
+    function verifyRateSignature(PriceFeed calldata priceFeed) public view virtual override returns (bool) {
         if (mockVerifyRateSignature) {
             return mockVerifyRateSignatureResult;
         }

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
-import "../../../src/routers/YodlUniswapRouter.sol";
-import {AbstractYodlRouterHarness} from "../../AbstractYodlRouter/shared/AbstractYodlRouterHarness.t.sol";
 import {ISwapRouter02} from "swap-router-contracts/interfaces/ISwapRouter02.sol";
+
+import {AbstractYodlRouter} from "@src/AbstractYodlRouter.sol";
+import {YodlUniswapRouter} from "@src/routers/YodlUniswapRouter.sol";
+import {AbstractYodlRouterHarness} from "@test/AbstractYodlRouter/shared/AbstractYodlRouterHarness.t.sol";
 
 contract YodlUniswapRouterHarness is YodlUniswapRouter, AbstractYodlRouterHarness {
     constructor(address _uniswapRouter) YodlUniswapRouter(_uniswapRouter) AbstractYodlRouterHarness() {
