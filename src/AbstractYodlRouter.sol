@@ -6,6 +6,7 @@ import "../lib/chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interf
 import "../lib/v3-periphery/contracts/interfaces/external/IWETH9.sol";
 import "../lib/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
 abstract contract AbstractYodlRouter {
     string public version;
@@ -248,24 +249,7 @@ abstract contract AbstractYodlRouter {
         if (priceFeed.deadline < block.timestamp) {
             return false;
         }
-        return recoverSigner(ethSignedMessageHash, priceFeed.signature) == RATE_VERIFIER;
-    }
 
-    function recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _signature) private pure returns (address) {
-        (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
-
-        return ecrecover(_ethSignedMessageHash, v, r, s);
-    }
-
-    function splitSignature(bytes memory sig) private pure returns (bytes32 r, bytes32 s, uint8 v) {
-        require(sig.length == 65, "invalid signature length");
-
-        assembly {
-            r := mload(add(sig, 32))
-            s := mload(add(sig, 64))
-            v := byte(0, mload(add(sig, 96)))
-        }
-
-        return (r, s, v);
+        return ECDSA.recover(ethSignedMessageHash, priceFeed.signature) == RATE_VERIFIER;
     }
 }
