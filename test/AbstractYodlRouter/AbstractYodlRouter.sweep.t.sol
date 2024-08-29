@@ -6,7 +6,7 @@ import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
 import {IERC20} from "@openzeppelin/contracts//token/ERC20/IERC20.sol";
-import {MockERC20} from "./shared/MockUSDC.sol";
+import {MockERC20} from "./shared/MockERC20.sol";
 
 contract YodlAbstractRouterTest is Test {
     AbstractYodlRouterHarness abstractRouter;
