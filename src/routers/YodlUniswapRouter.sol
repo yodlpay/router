@@ -107,11 +107,6 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter, Test {
 
             amountSpent = uniswapRouter.exactOutputSingle(routerParams);
 
-            // Check the balance of tokenOut after the swap
-            uint256 balanceAfterSwap1 = IERC20(tokenIn).balanceOf(address(this));
-            // uint256 balanceAfterSwap = IERC20(tokenOut).balanceOf(address(this));
-            // console.log("Balance of tokenOut after swap", balanceAfterSwap);
-            // console.log("13");
         } else {
             // We need to extract the path details so that we can use the tokenIn value from earlier which may have been replaced by WETH
             (, uint24 poolFee2, address tokenBase, uint24 poolFee1,) =
