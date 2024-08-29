@@ -115,7 +115,6 @@ abstract contract AbstractYodlRouter {
         view
         returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
     {
-        console.log("exchangeRate 1");
         bool shouldInverse;
 
         AggregatorV3Interface priceFeedOne;
@@ -131,18 +130,14 @@ abstract contract AbstractYodlRouter {
             }
         } else {
             // No need to inverse. invoiceCurrency: CHF, settlementCurrency: USD
-            console.log("exchangeRate 2");
             if (priceFeeds[0].feedType == EXTERNAL_FEED) {
                 if (!verifyRateSignature(priceFeeds[0])) {
                     revert("Invalid signature for external price feed");
                 }
             } else {
-                console.log("exchangeRate 3");
                 priceFeedOne = AggregatorV3Interface(priceFeeds[0].feedAddress);
-                console.log("exchangeRate 4");
             }
             if (priceFeeds[1].feedAddress != address(0)) {
-                console.log("exchangeRate 5");
                 // Multiply by the first, divide by the second
                 // Will always be A -> USD -> B
                 priceFeedTwo = AggregatorV3Interface(priceFeeds[1].feedAddress);
@@ -156,12 +151,9 @@ abstract contract AbstractYodlRouter {
             price = int256(priceFeeds[0].amount);
             prices[0] = price;
         } else {
-            console.log("exchangeRate 6");
             // Calculate the converted value using price feeds
             decimals = uint256(10 ** uint256(priceFeedOne.decimals()));
-            console.log("exchangeRate 7");
             (, price,,,) = priceFeedOne.latestRoundData();
-            console.log("exchangeRate 8");
             prices[0] = price;
         }
         if (shouldInverse) {

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
-// import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-// import {ISwapRouter02, IV3SwapRouter} from "@uniswap/swap-router-contracts//interfaces/ISwapRouter02.sol";
-import {IV3SwapRouter} from "@uniswap/swap-router-contracts//interfaces/ISwapRouter02.sol";
-import "@uniswap/swap-router-contracts//interfaces/ISwapRouter02.sol";
+import {ISwapRouter02} from "@uniswap/swap-router-contracts/interfaces/ISwapRouter02.sol";
+import {IV3SwapRouter} from "@uniswap/swap-router-contracts/interfaces/IV3SwapRouter.sol";
+
 import {AggregatorV3Interface} from "chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {Test, console} from "forge-std/Test.sol";
 
@@ -15,7 +14,6 @@ import {YodlUniswapRouterHarness} from "./shared/YodlUniswapRouterHarness.t.sol"
 
 contract YodlUniswapRouterTest is Test {
     YodlUniswapRouterHarness public harnessRouter;
-
     address constant uniswapRouterAddress = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
     MockERC20 public tokenA;
     MockERC20 public tokenB;
@@ -51,6 +49,8 @@ contract YodlUniswapRouterTest is Test {
         poolFee = uint24(3000); // 3%
         amountIn = 199 ether;
         amountOut = 90 ether;
+        uint256 decimals = 8;
+        int256 price = 1_0657_0000; // the contract should return an int256
 
         priceFeedChainlink = harnessRouter.getPriceFeedChainlink();
         priceFeedExternal = harnessRouter.getPriceFeedExternal();
@@ -61,7 +61,15 @@ contract YodlUniswapRouterTest is Test {
         tokenA.approve(address(harnessRouter), type(uint256).max);
 
         vm.mockCall(
-            uniswapRouterAddress, abi.encodeWithSelector(IV3SwapRouter.exactOutputSingle.selector), abi.encode(amountIn)
+            priceFeedChainlink.feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
+            abi.encode(decimals)
+        );
+
+        vm.mockCall(
+            priceFeedChainlink.feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+            abi.encode(0, price, 0, 0, 0)
         );
     }
 
@@ -94,116 +102,22 @@ contract YodlUniswapRouterTest is Test {
     }
 
     function test_yodlWithUniswap_SingleHop() public {
-        console.log("address(this)", address(this));
-        console.log("priceFeedChainlink: %s", priceFeedChainlink.feedType);
-        console.log("priceFeedChainlink: %s", priceFeedChainlink.feedAddress);
-
-        // assertEq(address(harnessRouter.uniswapRouter()), uniswapRouterAddress, "Uniswap router address mismatch");
-
-        // YodlUniswapRouter.YodlUniswapParams memory params = YodlUniswapRouter.YodlUniswapParams({
-        //     sender: SENDER,
-        //     receiver: RECEIVER,
-        //     amountIn: amountIn,
-        //     amountOut: amountOut,
-        //     // memo: "Test payment",
-        //     memo: "",
-        //     path: abi.encode(address(tokenB), poolFee, address(tokenA)),
-        //     priceFeeds: [priceFeedChainlink, priceFeedNULL],
-        //     extraFeeReceiver: address(0),
-        //     extraFeeBps: 0,
-        //     swapType: YodlUniswapRouter.SwapType.SINGLE,
-        //     yd: 0,
-        //     yAppList: new YodlUniswapRouter.YApp[](0)
-        // });
-
-        // Mock the Uniswap swap
-        // mockUniswapRouter.setAmountSpent(95 ether);
-
-        uint256 decimals = 8;
-        int256 price = 1_0657_0000; // the contract should return an int256
-
         vm.mockCall(
             uniswapRouterAddress, abi.encodeWithSelector(IV3SwapRouter.exactOutputSingle.selector), abi.encode(amountIn)
         );
 
-        // vm.mockCall(
-        //     uniswapRouterAddress,
-        //     abi.encodeWithSelector(
-        //         IV3SwapRouter.exactOutputSingle.selector,
-        //         IV3SwapRouter.ExactOutputSingleParams({
-        //             tokenIn: address(tokenA),
-        //             tokenOut: USDC,
-        //             fee: poolFee,
-        //             recipient: address(harnessRouter),
-        //             amountOut: amountOut,
-        //             amountInMaximum: amountIn,
-        //             sqrtPriceLimitX96: 0
-        //         })
-        //     ),
-        //     abi.encode(amountIn) // This is the amount spent, which should be less than or equal to amountInMaximum
-        // );
-
-        vm.mockCall(
-            priceFeedChainlink.feedAddress,
-            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
-            abi.encode(decimals)
-        );
-
-        vm.mockCall(
-            priceFeedChainlink.feedAddress,
-            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-            abi.encode(0, price, 0, 0, 0)
-        );
+        uint256 senderBalanceBefore = tokenA.balanceOf(SENDER);
 
         YodlUniswapRouter.YodlUniswapParams memory singleParams = createParams(true);
-        // singleParams = createParams(true);
-
-        uint256 amountSpent;
 
         vm.prank(SENDER, SENDER);
-        // uint256 amountSpent = harnessRouter.yodlWithUniswap(singleParams);
-        try harnessRouter.yodlWithUniswap(singleParams) returns (uint256 _amountSpent) {
-            amountSpent = _amountSpent;
-            console.log("yodlWithUniswap succeeded, amountSpent:", _amountSpent);
-        } catch Error(string memory reason) {
-            console.log("yodlWithUniswap failed with reason:", reason);
-            // fail("yodlWithUniswap should not revert");
-            fail();
-        } catch (bytes memory lowLevelData) {
-            console.log("yodlWithUniswap failed with low-level error");
-            console.logBytes(lowLevelData);
-            fail();
-        }
+        uint256 amountSpent = harnessRouter.yodlWithUniswap(singleParams);
 
-        assertEq(amountSpent, 95 ether, "Incorrect amount spent");
-        assertEq(tokenB.balanceOf(RECEIVER), 90 ether, "Incorrect amount received");
+        assertEq(senderBalanceBefore - tokenA.balanceOf(SENDER), amountIn, "Incorrect amount spent");
+        assertEq(amountSpent, amountIn, "Incorrect amount spent");
+
+        // NB: To assert other balances we need to either mock the uniswap contract or run on forked mainnet
     }
-
-    // function test_yodlWithUniswap_MultiHop() public {
-    //     YodlUniswapRouter.YodlUniswapParams memory params = YodlUniswapRouter.YodlUniswapParams({
-    //         sender: SENDER,
-    //         receiver: RECEIVER,
-    //         amountIn: 100 ether,
-    //         amountOut: 85 ether,
-    //         memo: "Test multi-hop payment",
-    //         path: abi.encodePacked(address(tokenOut), uint24(3000), address(tokenBase), uint24(500), address(tokenIn)),
-    //         priceFeeds: new YodlUniswapRouter.PriceFeed[](2),
-    //         extraFeeReceiver: address(0),
-    //         extraFeeBps: 0,
-    //         swapType: YodlUniswapRouter.SwapType.MULTI,
-    //         yd: 0,
-    //         yAppList: new YodlUniswapRouter.YApp[](0)
-    //     });
-
-    //     // Mock the Uniswap swap
-    //     // mockUniswapRouter.setAmountSpent(92 ether);
-
-    //     vm.prank(SENDER);
-    //     uint256 amountSpent = harnessRouter.yodlWithUniswap(params);
-
-    //     assertEq(amountSpent, 92 ether, "Incorrect amount spent");
-    //     assertEq(tokenOut.balanceOf(RECEIVER), 85 ether, "Incorrect amount received");
-    // }
 
     function test_decodeTokenOutTokenInUniswap() public view {
         /* Test single hop */
@@ -232,36 +146,4 @@ contract YodlUniswapRouterTest is Test {
 
         assertEq(fee, 3000, "Incorrect pool fee decoded");
     }
-
-    // function test_yodlWithUniswap_WithExtraFee() public {
-    //     address extraFeeReceiver = address(0x3);
-    //     uint256 extraFeeBps = 100; // 1%
-
-    //     YodlUniswapRouter.YodlUniswapParams memory params = YodlUniswapRouter.YodlUniswapParams({
-    //         sender: SENDER,
-    //         receiver: RECEIVER,
-    //         amountIn: 100 ether,
-    //         amountOut: 90 ether,
-    //         memo: "Test payment with extra fee",
-    //         path: abi.encodePacked(address(tokenOut), uint24(3000), address(tokenIn)),
-    //         priceFeeds: YodlUniswapRouter.PriceFeed[](2),
-    //         extraFeeReceiver: extraFeeReceiver,
-    //         extraFeeBps: extraFeeBps,
-    //         swapType: YodlUniswapRouter.SwapType.SINGLE,
-    //         yd: 0,
-    //         yAppList: new YodlUniswapRouter.YApp[](0)
-    //     });
-
-    //     // Mock the Uniswap swap
-    //     // mockUniswapRouter.setAmountSpent(95 ether);
-
-    //     vm.prank(SENDER);
-    //     uint256 amountSpent = router.yodlWithUniswap(params);
-
-    //     assertEq(amountSpent, 95 ether, "Incorrect amount spent");
-
-    //     uint256 expectedExtraFee = (90 ether * extraFeeBps) / 10000;
-    //     assertEq(tokenOut.balanceOf(RECEIVER), 90 ether - expectedExtraFee, "Incorrect amount received by receiver");
-    //     assertEq(tokenOut.balanceOf(extraFeeReceiver), expectedExtraFee, "Incorrect extra fee received");
-    // }
 }
