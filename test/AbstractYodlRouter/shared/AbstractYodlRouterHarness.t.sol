@@ -11,6 +11,7 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
     AbstractYodlRouter.PriceFeed public priceFeedExternal;
     bool private mockVerifyRateSignature;
     bool private mockVerifyRateSignatureResult;
+    address public constant MOCK_RATE_VERIFIER = 0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf; // vm.addr(1)
 
     constructor() AbstractYodlRouter() {
         version = "vSam";
@@ -39,7 +40,7 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
         });
     }
 
-    /* Add functions to get the pricefeeds as a structs */
+    /* Add functions to get the pricefeeds as structs */
 
     function getPriceFeedChainlink() public view returns (AbstractYodlRouter.PriceFeed memory) {
         return priceFeedChainlink;
@@ -65,10 +66,43 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
         mockVerifyRateSignatureResult = _result;
     }
 
+    /* Replaced by below function. Leaving here for now in case we need to revert */
+    // function verifyRateSignature(PriceFeed calldata priceFeed) public view override returns (bool) {
+    //     if (mockVerifyRateSignature) {
+    //         return mockVerifyRateSignatureResult;
+    //     }
+    //     return super.verifyRateSignature(priceFeed);
+    // }
+
+    /* Override verifyRateSignature and re-implement nested functions */
     function verifyRateSignature(PriceFeed calldata priceFeed) public view override returns (bool) {
         if (mockVerifyRateSignature) {
             return mockVerifyRateSignatureResult;
         }
-        return super.verifyRateSignature(priceFeed);
+
+        bytes32 messageHash = keccak256(abi.encodePacked(priceFeed.currency, priceFeed.amount, priceFeed.deadline));
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+
+        if (priceFeed.deadline < block.timestamp) {
+            return false;
+        }
+        return _recoverSigner(ethSignedMessageHash, priceFeed.signature) == MOCK_RATE_VERIFIER; // This is the reason we need to override/re-implement
+    }
+
+    function _recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _signature) private pure returns (address) {
+        (bytes32 r, bytes32 s, uint8 v) = _splitSignature(_signature);
+        return ecrecover(_ethSignedMessageHash, v, r, s);
+    }
+
+    function _splitSignature(bytes memory sig) private pure returns (bytes32 r, bytes32 s, uint8 v) {
+        require(sig.length == 65, "Invalid signature length");
+
+        assembly {
+            r := mload(add(sig, 32))
+            s := mload(add(sig, 64))
+            v := byte(0, mload(add(sig, 96)))
+        }
+
+        return (r, s, v);
     }
 }
