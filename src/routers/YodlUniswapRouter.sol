@@ -103,7 +103,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
                 sqrtPriceLimitX96: 0
             });
 
-            outAmountNet = uniswapRouter.exactOutputSingle(routerParams);
+            inAmount = uniswapRouter.exactOutputSingle(routerParams);
         } else {
             // We need to extract the path details so that we can use the tokenIn value from earlier which may have been replaced by WETH
             (, uint24 poolFee2, address tokenBase, uint24 poolFee1,) =
