@@ -76,30 +76,32 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
     function yodlWithToken(YodlTransferParams calldata params) external payable returns (uint256) {
         require(params.amount != 0, "invalid amount");
 
-        uint256 finalAmount = params.amount;
+        uint256 outAmountGross = params.amount;
 
         // transform amount with priceFeeds
         if (params.priceFeeds[0].feedType != NULL_FEED || params.priceFeeds[1].feedType != NULL_FEED) {
             {
                 int256[2] memory prices;
                 address[2] memory priceFeedsUsed;
-                (finalAmount, priceFeedsUsed, prices) = exchangeRate(params.priceFeeds, params.amount);
+                (outAmountGross, priceFeedsUsed, prices) = exchangeRate(params.priceFeeds, params.amount);
                 emitConversionEvent(params.priceFeeds, prices);
             }
         }
 
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token
-            require(IERC20(params.token).allowance(msg.sender, address(this)) >= finalAmount, "insufficient allowance");
+            require(
+                IERC20(params.token).allowance(msg.sender, address(this)) >= outAmountGross, "insufficient allowance"
+            );
         } else {
             // Native ether
-            require(msg.value >= finalAmount, "insufficient gas provided");
+            require(msg.value >= outAmountGross, "insufficient gas provided");
         }
 
         uint256 totalFee = 0;
 
-        if (params.memo != "") {
-            totalFee += calculateFee(finalAmount, yodlFeeBps);
+        if (params.memo != "" || params.yAppList.length > 0) {
+            totalFee += calculateFee(outAmountGross, yodlFeeBps);
         }
 
         if (params.extraFeeReceiver != address(0)) {
@@ -107,7 +109,7 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
             require(params.extraFeeBps < MAX_EXTRA_FEE_BPS, "extraFeeBps too high");
 
             totalFee += transferFee(
-                finalAmount,
+                outAmountGross,
                 params.extraFeeBps,
                 params.token,
                 params.token == NATIVE_TOKEN ? address(this) : msg.sender,
@@ -115,13 +117,13 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
             );
         }
 
-        uint256 receivedAmount = finalAmount - totalFee;
+        uint256 outAmountNet = outAmountGross - totalFee;
         if (params.yAppList.length > 0) {
             for (uint256 i = 0; i < params.yAppList.length; i++) {
                 IBeforeHook(params.yAppList[i].yApp).beforeHook(
                     msg.sender,
                     params.receiver,
-                    receivedAmount,
+                    outAmountGross,
                     params.token,
                     params.yAppList[i].sessionId,
                     params.yAppList[i].payload
@@ -132,16 +134,16 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         // Transfer to receiver
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token
-            TransferHelper.safeTransferFrom(params.token, msg.sender, params.receiver, receivedAmount);
+            TransferHelper.safeTransferFrom(params.token, msg.sender, params.receiver, outAmountNet);
         } else {
             // Native ether
-            (bool success,) = params.receiver.call{value: receivedAmount}("");
+            (bool success,) = params.receiver.call{value: outAmountNet}("");
             require(success, "transfer of the native token to the recipient failed");
-            emit YodlNativeTokenTransfer(msg.sender, params.receiver, receivedAmount);
+            emit YodlNativeTokenTransfer(msg.sender, params.receiver, outAmountNet);
         }
 
-        emit Yodl(msg.sender, params.receiver, params.token, finalAmount, totalFee, params.memo);
+        emit Yodl(msg.sender, params.receiver, params.token, outAmountGross, totalFee, params.memo);
 
-        return receivedAmount;
+        return outAmountNet;
     }
 }

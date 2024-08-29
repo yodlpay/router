@@ -44,25 +44,26 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
     function yodlWithUniswap(YodlUniswapParams calldata params) external payable returns (uint256) {
         require(address(uniswapRouter) != address(0), "uniswap router not present");
         (address tokenOut, address tokenIn) = decodeTokenOutTokenInUniswap(params.path, params.swapType);
-        uint256 amountSpent;
+        uint256 inAmount;
 
         // This is how much the recipient needs to receive
-        uint256 amountOutExpected;
+        uint256 outAmountGross;
         if (params.priceFeeds[0].feedType != NULL_FEED || params.priceFeeds[1].feedType != NULL_FEED) {
             // Convert amountOut from invoice currency to swap currency using price feed
             int256[2] memory prices;
             address[2] memory priceFeeds;
-            (amountOutExpected, priceFeeds, prices) = exchangeRate(params.priceFeeds, params.amountOut);
+            (outAmountGross, priceFeeds, prices) = exchangeRate(params.priceFeeds, params.amountOut);
             emitConversionEvent(params.priceFeeds, prices);
         } else {
-            amountOutExpected = params.amountOut;
+            outAmountGross = params.amountOut;
         }
+
         if (params.yAppList.length > 0) {
             for (uint256 i = 0; i < params.yAppList.length; i++) {
                 IBeforeHook(params.yAppList[i].yApp).beforeHook(
                     tx.origin,
                     params.receiver,
-                    amountOutExpected,
+                    outAmountGross,
                     tokenOut,
                     params.yAppList[i].sessionId,
                     params.yAppList[i].payload
@@ -97,12 +98,12 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
                 tokenOut: tokenOut,
                 fee: decodeSinglePoolFee(params.path),
                 recipient: address(this),
-                amountOut: amountOutExpected,
+                amountOut: outAmountGross,
                 amountInMaximum: params.amountIn,
                 sqrtPriceLimitX96: 0
             });
 
-            amountSpent = uniswapRouter.exactOutputSingle(routerParams);
+            inAmount = uniswapRouter.exactOutputSingle(routerParams);
         } else {
             // We need to extract the path details so that we can use the tokenIn value from earlier which may have been replaced by WETH
             (, uint24 poolFee2, address tokenBase, uint24 poolFee1,) =
@@ -111,24 +112,24 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
             IV3SwapRouter.ExactOutputParams memory routerParams = IV3SwapRouter.ExactOutputParams({
                 path: abi.encodePacked(tokenOut, poolFee2, tokenBase, poolFee1, tokenIn),
                 recipient: address(this),
-                amountOut: amountOutExpected,
+                amountOut: outAmountGross,
                 amountInMaximum: params.amountIn
             });
 
-            amountSpent = uniswapRouter.exactOutput(routerParams);
+            inAmount = uniswapRouter.exactOutput(routerParams);
         }
 
         // Handle unwrapping wrapped native token
         if (useNativeToken) {
             // Unwrap and use NATIVE_TOKEN address as tokenOut
-            IWETH9(wrappedNativeToken).withdraw(amountOutExpected);
+            IWETH9(wrappedNativeToken).withdraw(outAmountGross);
             tokenOut = NATIVE_TOKEN;
         }
 
         // Calculate fee from amount out
         uint256 totalFee = 0;
-        if (params.memo != "") {
-            totalFee += calculateFee(amountOutExpected, yodlFeeBps);
+        if (params.memo != "" || params.yAppList.length > 0) {
+            totalFee += calculateFee(outAmountGross, yodlFeeBps);
         }
 
         // Handle extra fees
@@ -137,23 +138,23 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
             require(params.extraFeeBps < MAX_EXTRA_FEE_BPS, "extraFeeBps too high");
 
             totalFee +=
-                transferFee(amountOutExpected, params.extraFeeBps, tokenOut, address(this), params.extraFeeReceiver);
+                transferFee(outAmountGross, params.extraFeeBps, tokenOut, address(this), params.extraFeeReceiver);
         }
 
         if (tokenOut == NATIVE_TOKEN) {
-            (bool success,) = params.receiver.call{value: amountOutExpected - totalFee}("");
+            (bool success,) = params.receiver.call{value: outAmountGross - totalFee}("");
             require(success, "transfer failed");
-            emit YodlNativeTokenTransfer(params.sender, params.receiver, amountOutExpected - totalFee);
+            emit YodlNativeTokenTransfer(params.sender, params.receiver, outAmountGross - totalFee);
         } else {
             // transfer tokens to receiver
-            TransferHelper.safeTransfer(tokenOut, params.receiver, amountOutExpected - totalFee);
+            TransferHelper.safeTransfer(tokenOut, params.receiver, outAmountGross - totalFee);
         }
 
-        emit Yodl(params.sender, params.receiver, tokenOut, amountOutExpected, totalFee, params.memo);
+        emit Yodl(params.sender, params.receiver, tokenOut, outAmountGross, totalFee, params.memo);
 
         TransferHelper.safeApprove(tokenIn, address(uniswapRouter), 0);
 
-        return amountSpent;
+        return inAmount;
     }
 
     /// @notice Helper method to determine the token in and out from a Uniswap path

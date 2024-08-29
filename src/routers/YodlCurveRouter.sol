@@ -45,22 +45,23 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         (address tokenOut, address tokenIn) = decodeTokenOutTokenInCurve(params.route);
 
         // This is how much the recipient needs to receive
-        uint256 amountOutExpected;
+        uint256 outAmountGross;
         if (params.priceFeeds[0].feedType != NULL_FEED || params.priceFeeds[1].feedType != NULL_FEED) {
             // Convert amountOut from invoice currency to swap currency using price feed
             int256[2] memory prices;
             address[2] memory priceFeeds;
-            (amountOutExpected, priceFeeds, prices) = exchangeRate(params.priceFeeds, params.amountOut);
+            (outAmountGross, priceFeeds, prices) = exchangeRate(params.priceFeeds, params.amountOut);
             emitConversionEvent(params.priceFeeds, prices);
         } else {
-            amountOutExpected = params.amountOut;
+            // no conversion. tokenOut.currency matches invoiceCurrency.
+            outAmountGross = params.amountOut;
         }
         if (params.yAppList.length > 0) {
             for (uint256 i = 0; i < params.yAppList.length; i++) {
                 IBeforeHook(params.yAppList[i].yApp).beforeHook(
                     msg.sender,
                     params.receiver,
-                    amountOutExpected,
+                    outAmountGross,
                     tokenOut,
                     params.yAppList[i].sessionId,
                     params.yAppList[i].payload
@@ -89,16 +90,16 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
             params.route,
             params.swapParams,
             params.amountIn,
-            amountOutExpected, // this will revert if we do not get at least this amount
+            outAmountGross, // this will revert if we do not get at least this amount
             params.factoryAddresses, // this is for zap contracts
             address(this) // the Yodl router will receive the tokens
         );
-        require(amountOut >= amountOutExpected, "amountOut is less then amountOutExpected");
+        require(amountOut >= outAmountGross, "amountOut is less then outAmountGross");
 
         // Handle fees for the transaction - in terms out the token out
         uint256 totalFee = 0;
-        if (params.memo != "") {
-            totalFee += calculateFee(amountOutExpected, yodlFeeBps);
+        if (params.memo != "" || params.yAppList.length > 0) {
+            totalFee += calculateFee(outAmountGross, yodlFeeBps);
         }
 
         // Handle extra fees
@@ -107,23 +108,23 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
             require(params.extraFeeBps < MAX_EXTRA_FEE_BPS, "extraFeeBps too high");
 
             totalFee +=
-                transferFee(amountOutExpected, params.extraFeeBps, tokenOut, address(this), params.extraFeeReceiver);
+                transferFee(outAmountGross, params.extraFeeBps, tokenOut, address(this), params.extraFeeReceiver);
         }
         if (tokenOut == NATIVE_TOKEN) {
             // Handle unwrapping wrapped native token
             uint256 balance = IWETH9(wrappedNativeToken).balanceOf(address(this));
             // Unwrap and use NATIVE_TOKEN address as tokenOut
-            require(balance >= amountOutExpected, "Wrapped balance is less then amountOutExpected");
+            require(balance >= outAmountGross, "Wrapped balance is less then outAmountGross");
             IWETH9(wrappedNativeToken).withdraw(balance);
             // Need to transfer native token to receiver
-            (bool success,) = params.receiver.call{value: amountOutExpected - totalFee}("");
+            (bool success,) = params.receiver.call{value: outAmountGross - totalFee}("");
             require(success, "transfer of native to receiver failed");
-            emit YodlNativeTokenTransfer(params.sender, params.receiver, amountOutExpected - totalFee);
+            emit YodlNativeTokenTransfer(params.sender, params.receiver, outAmountGross - totalFee);
         } else {
             // Transfer tokens to receiver
-            TransferHelper.safeTransfer(tokenOut, params.receiver, amountOutExpected - totalFee);
+            TransferHelper.safeTransfer(tokenOut, params.receiver, outAmountGross - totalFee);
         }
-        emit Yodl(params.sender, params.receiver, tokenOut, amountOutExpected, totalFee, params.memo);
+        emit Yodl(params.sender, params.receiver, tokenOut, outAmountGross, totalFee, params.memo);
 
         return amountOut;
     }
