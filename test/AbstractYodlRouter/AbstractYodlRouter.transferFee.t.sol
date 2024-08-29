@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
-import {MockERC20} from "./shared/MockUSDC.sol";
+import {MockERC20} from "@test/AbstractYodlRouter/shared/MockERC20.sol";
 
 contract YodlAbstractRouterTest is Test {
     AbstractYodlRouterHarness abstractRouter;
