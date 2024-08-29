@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
+import {MockERC20} from "./shared/MockUSDC.sol";
 
 contract YodlAbstractRouterTest is Test {
     AbstractYodlRouterHarness abstractRouter;
@@ -12,60 +13,122 @@ contract YodlAbstractRouterTest is Test {
     function setUp() public {
         abstractRouter = new AbstractYodlRouterHarness();
     }
-    /* 
-    1. Check old code - not there
-    * fuzz amount, feeBps
-    * use native and non-native tokens
-    * test both reverts
-    * test send from contract and from user address
-    * check balances
-    */
 
     /* 
-    * Scenario: fuzz testing amount and feeBps
+    * Should return 0 when calculated fee < 0. 
+    * 100 * 10 / 10_000 == 0.01 - calculateFee will return 0
     */
-    // function testFuzz_TransferFee(uint256 amount, uint256 feeBps) public view {
-    //     // set up vars
-    //     // uint256 amount, uint256 feeBps, address token, address from, address to
-    //     address token = abstractRouter.NATIVE_TOKEN();
+    function test_TransferFee_CalculatedFeeIsZero() public {
+        uint256 amount = 100;
+        uint256 feeBps = 10; // 0.1%
+        address token = abstractRouter.NATIVE_TOKEN(); // any
+        address from = address(1); // any
+        address to = address(2); // any
 
-    //     // make the call
-    //     // abstractRouter.exposed_transferFee(amount, feeBps, token, from, to);
-    // }
+        uint256 fee = abstractRouter.exposed_transferFee(amount, feeBps, token, from, to);
+        assertEq(fee, 0);
+    }
+
+    /* 
+    * Scenario: Non-native token, from YodlRouter. Should tranfer fee from --> to
+    */
+    function testFuzz_TransferFee_NonNativeTokenFromContract(uint256 amount, uint16 feeBps) public {
+        vm.assume(amount < 1e68);
+        vm.assume(feeBps > 0 && feeBps <= 10000); // Ensure fee is between 0% and 100%
+
+        address from = address(abstractRouter);
+        address to = address(1);
+        MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18);
+
+        deal(address(tokenA), address(abstractRouter), 1e68, true); // Give the YodlRouter some tokens
+        uint256 fromBalanceBefore = tokenA.balanceOf(from);
+        uint256 toBalanceBefore = tokenA.balanceOf(to);
+
+        uint256 fee = abstractRouter.exposed_transferFee(amount, feeBps, address(tokenA), from, to);
+        uint256 fromBalanceAfter = tokenA.balanceOf(from);
+        uint256 toBalanceAfter = tokenA.balanceOf(to);
+
+        assertEq(fromBalanceAfter, fromBalanceBefore - fee);
+        assertEq(toBalanceAfter, toBalanceBefore + fee);
+    }
+
+    /* 
+    * Scenario: Non-native token, from external address. Should tranfer fee from --> to
+    */
+    function testFuzz_TransferFee_NonNativeTokenFromOtherAddress(uint256 amount, uint16 feeBps) public {
+        vm.assume(amount < 1e68);
+        vm.assume(feeBps > 0 && feeBps <= 10000); // Ensure fee is between 0% and 100%
+
+        address from = address(1);
+        address to = address(2);
+        MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18);
+
+        deal(address(tokenA), address(from), 1e68, true); // Give from address some tokens
+
+        /* Approve tokenA spend on behalf of 'from' */
+        vm.prank(from);
+        tokenA.approve(address(abstractRouter), type(uint256).max);
+
+        uint256 fromBalanceBefore = tokenA.balanceOf(from);
+        uint256 toBalanceBefore = tokenA.balanceOf(to);
+
+        uint256 fee = abstractRouter.exposed_transferFee(amount, feeBps, address(tokenA), from, to);
+
+        uint256 fromBalanceAfter = tokenA.balanceOf(from);
+        uint256 toBalanceAfter = tokenA.balanceOf(to);
+
+        assertEq(fromBalanceAfter, fromBalanceBefore - fee);
+        assertEq(toBalanceAfter, toBalanceBefore + fee);
+    }
+
+    /*
+    * Scenario: native token, from YodlRouter. Should tranfer fee from --> to 
+    */
+    function testFuzz_TransferFee_NativeTokenFromContract(uint256 amount, uint16 feeBps) public {
+        vm.assume(amount < 1e68);
+        vm.assume(feeBps > 0 && feeBps <= 10000); // Ensure fee is between 0% and 100%
+
+        address from = address(abstractRouter);
+        address to = address(1);
+
+        vm.deal(from, 1e68); // Give ETH to 'from'
+
+        uint256 fromBalanceBefore = from.balance;
+        uint256 toBalanceBefore = to.balance;
+
+        uint256 fee = abstractRouter.exposed_transferFee(amount, feeBps, abstractRouter.NATIVE_TOKEN(), from, to);
+
+        uint256 fromBalanceAfter = from.balance;
+        uint256 toBalanceAfter = to.balance;
+
+        assertEq(fromBalanceAfter, fromBalanceBefore - fee);
+        assertEq(toBalanceAfter, toBalanceBefore + fee);
+    }
+
+    /* 
+    * Scenario: native token, from external address. Shold revert with message.
+    */
+    function test_TransferFee_NativeTokenFromOtherAddress() public {
+        /* Make sure fee is > 0, otherwise it will return 0 */
+        uint256 amount = 1000;
+        uint16 feeBps = 200;
+
+        address from = address(1);
+        address to = address(2);
+        address tokenA = abstractRouter.NATIVE_TOKEN();
+
+        vm.deal(from, 1e68); // Give ETH to 'from'
+
+        uint256 fromBalanceBefore = from.balance;
+        uint256 toBalanceBefore = to.balance;
+
+        vm.expectRevert("can only transfer eth from the router address");
+        abstractRouter.exposed_transferFee(amount, feeBps, tokenA, from, to);
+
+        uint256 fromBalanceAfter = from.balance;
+        uint256 toBalanceAfter = to.balance;
+
+        assertEq(fromBalanceAfter, fromBalanceBefore, "From balance should not change");
+        assertEq(toBalanceAfter, toBalanceBefore, "To balance should not change");
+    }
 }
-
-//     /// @notice Calculates and transfers fee directly from an address to another
-//     /// @dev This can be used for directly transferring the Yodl fee from the sender to the treasury, or transferring
-//     /// the extra fee to the extra fee receiver.
-//     /// @param amount Amount from which to calculate the fee
-//     /// @param feeBps The size of the fee in basis points
-//     /// @param token The token which is being used to pay the fee. Can be an ERC20 token or the native token
-//     /// @param from The address from which we are transferring the fee
-//     /// @param to The address to which the fee will be sent
-//     /// @return The fee sent
-//     function transferFee(uint256 amount, uint256 feeBps, address token, address from, address to)
-//         internal
-//         returns (uint256)
-//     {
-//         uint256 fee = calculateFee(amount, feeBps);
-//         if (fee > 0) {
-//             if (token != NATIVE_TOKEN) {
-//                 // ERC20 token
-//                 if (from == address(this)) {
-//                     TransferHelper.safeTransfer(token, to, fee);
-//                 } else {
-//                     // safeTransferFrom requires approval
-//                     TransferHelper.safeTransferFrom(token, from, to, fee);
-//                 }
-//             } else {
-//                 require(from == address(this), "can only transfer eth from the router address");
-
-//                 // Native ether
-//                 (bool success,) = to.call{value: fee}("");
-//                 require(success, "transfer failed in transferFee");
-//             }
-//             return fee;
-//         } else {
-//             return 0;
-//         }
-//     }
