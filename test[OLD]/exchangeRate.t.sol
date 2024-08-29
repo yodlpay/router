@@ -26,10 +26,11 @@ contract YodlRouterV1Test is Test {
     // test..Scenarios are useful for --gas-reports
 
     function test_ExchangeRateWithNullFeeds() public {
-        (uint256 converted, int256[2] memory prices) = yodlRouter.exchangeRate(
-            [nullFeed, nullFeed],
-            1000000
-        );
+        (
+            uint256 converted,
+            address[2] memory priceFeedsUsed,
+            int256[2] memory prices
+        ) = yodlRouter.exchangeRate([nullFeed, nullFeed], 1000000);
 
         assertEq(converted, 1000000);
     }
@@ -60,10 +61,11 @@ contract YodlRouterV1Test is Test {
             deadline: 0,
             signature: ""
         });
-        (uint256 converted, int256[2] memory prices) = yodlRouter.exchangeRate(
-            [pf0, nullFeed],
-            20000000
-        );
+        (
+            uint256 converted,
+            address[2] memory priceFeedsUsed,
+            int256[2] memory prices
+        ) = yodlRouter.exchangeRate([pf0, nullFeed], 20000000);
 
         assertEq(converted, 2 * 10657000);
     }
@@ -94,10 +96,11 @@ contract YodlRouterV1Test is Test {
             deadline: 0,
             signature: ""
         });
-        (uint256 converted, int256[2] memory prices) = yodlRouter.exchangeRate(
-            [nullFeed, pf],
-            20000000
-        );
+        (
+            uint256 converted,
+            address[2] memory priceFeedsUsed,
+            int256[2] memory prices
+        ) = yodlRouter.exchangeRate([nullFeed, pf], 20000000);
 
         assertEq(converted, 18767007);
     }

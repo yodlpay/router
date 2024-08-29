@@ -19,25 +19,28 @@ contract YodlAbstractRouterTest is Test {
         priceFeedExternal = abstractRouter.getPriceFeedExternal();
     }
 
-    /*
-     * Scenario: No PriceFeeds are passed
-     * Should return: amount (as passed to it), two zero addresses for PriceFeeds and a price array of [1, 1]
-     */
+    /* 
+    * Scenario: No PriceFeeds are passed
+    * Should return: amount (as passed to it), two zero addresses for PriceFeeds and a price array of [1, 1]
+    */
     function testFuzz_ExchangeRate_NoPriceFeed(uint256 amount) public view {
         vm.assume(amount < 1e68); // amounts greater than this will have arithmetic overflow errors
 
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedZeroValues, priceFeedZeroValues];
 
-        (uint256 converted, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
+            abstractRouter.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, amount, "converted not equal to amount");
         assertEq(prices[0], int256(1));
         assertEq(prices[1], int256(1));
+        assertEq(priceFeedsUsed[0], address(0), "priceFeedsUsed[0] not equal to address(0)");
+        assertEq(priceFeedsUsed[1], address(0));
     }
 
-    /*
-     * Scenario: Only PriceFeed[1] is passed
-     */
+    /* 
+    * Scenario: Only PriceFeed[1] is passed
+    */
     function testFuzz_ExchangeRate_OnlyPriceFeedTwo(uint256 amount) public {
         vm.assume(amount < 1e68); // prevent arithmetic overflow
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedZeroValues, priceFeedChainlink];
@@ -58,16 +61,16 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price, 0, 0, 0)
         );
 
-        (uint256 converted, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, (amount * 10 ** decimals) / uint256(price), "converted not equal to expected amount");
         assertEq(prices[0], price, "prices[0] not equal to price");
         assertEq(prices[1], 0, "prices[1] != 0"); // shoud not exist
     }
 
-    /*
-     * Scenario: Only PriceFeed[0] is passed
-     */
+    /* 
+    * Scenario: Only PriceFeed[0] is passed
+    */
     function testFuzz_ExchangeRate_OnlyPriceFeedOne(uint256 amount) public {
         vm.assume(amount < 1e68); // prevent arithmetic overflow
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedChainlink, priceFeedZeroValues];
@@ -88,16 +91,16 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price, 0, 0, 0)
         );
 
-        (uint256 converted, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
-        assertEq(converted, (amount * uint256(price)) / 10 ** decimals, "converted not equal to expected amount");
+        assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to expected amount");
         assertEq(prices[0], price, "prices[0] not equal to price");
         assertEq(prices[1], 0, "prices[1] != 0"); // shoud not exist
     }
 
     /*
-     * Scenario: Two priceFeeds are passed
-     */
+    * Scenario: Two priceFeeds are passed
+    */
     function testFuzz_ExchangeRate_TwoPriceFeeds(uint256 amount) public {
         vm.assume(amount < 1e68); // prevent arithmetic overflow
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedChainlink, priceFeedExternal];
@@ -132,20 +135,20 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price2, 0, 0, 0)
         );
 
-        (uint256 converted, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
-        uint256 expectedConverted = (amount * uint256(price1)) / (10 ** decimals1);
-        expectedConverted = (expectedConverted * (10 ** decimals2)) / uint256(price2);
+        uint256 expectedConverted = amount * uint256(price1) / (10 ** decimals1);
+        expectedConverted = expectedConverted * (10 ** decimals2) / uint256(price2);
 
         assertEq(converted, expectedConverted, "converted not equal to expected amount");
         assertEq(prices[0], price1, "prices[0] not equal to price");
         assertEq(prices[1], price2, "prices[1] != 0"); // shoud not exist
     }
 
-    /*
-     * Scenario: One Pricefeed, Pricefeed is external
-     * Should default to using 18 decimals and the price given
-     */
+    /* 
+    * Scenario: One Pricefeed, Pricefeed is external
+    * Should default to using 18 decimals and the price given
+    */
     function testFuzz_ExchangeRate_ExternalPricefeed(uint256 amount) public {
         vm.assume(amount < 1e68); // prevent arithmetic overflow
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedZeroValues];
@@ -160,18 +163,16 @@ contract YodlAbstractRouterTest is Test {
         //     abi.encode(true)
         // );
 
-        (uint256 converted, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
-        assertEq(
-            converted, (amount * uint256(priceFeeds[0].amount)) / 10 ** 18, "converted not equal to expected amount"
-        );
+        assertEq(converted, amount * uint256(priceFeeds[0].amount) / 10 ** 18, "converted not equal to expected amount");
         assertEq(prices[0], int256(priceFeeds[0].amount), "prices[0] not equal to price");
     }
 
-    /*
-     * NB: May be redundant if verifyRateSignature is tested elsewhere (which is likely will)
-     * Scenorio: Pricefeed[0] is external, but the signature is invalid
-     */
+    /* 
+    * NB: May be redundant if verifyRateSignature is tested elsewhere (which is likely will)
+    * Scenorio: Pricefeed[0] is external, but the signature is invalid
+    */
     function q() public {
         uint256 amount = 999;
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedZeroValues];
@@ -180,10 +181,10 @@ contract YodlAbstractRouterTest is Test {
         abstractRouter.exchangeRate(priceFeeds, amount);
     }
 
-    /*
-     * Scenario: Only PriceFeed[0] is passed, testing all pricefeed decimals between 6-18
-     * Manual fuzzing as range is small.
-     */
+    /* 
+    * Scenario: Only PriceFeed[0] is passed, testing all pricefeed decimals between 6-18
+    * Manual fuzzing as range is small.
+    */
     function testFuzz_ExchangeRate_PricefeedDecimals() public {
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedChainlink, priceFeedZeroValues];
         uint256 amount = 999;
@@ -204,9 +205,9 @@ contract YodlAbstractRouterTest is Test {
                 abi.encode(0, price, 0, 0, 0)
             );
 
-            (uint256 converted, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+            (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
-            assertEq(converted, (amount * uint256(price)) / 10 ** decimals, "converted not equal to expected amount");
+            assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to expected amount");
             assertEq(prices[0], price, "prices[0] not equal to price");
             assertEq(prices[1], 0, "prices[1] != 0");
         }
