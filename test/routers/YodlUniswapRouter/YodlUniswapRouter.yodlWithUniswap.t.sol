@@ -123,21 +123,12 @@ contract YodlUniswapRouterTest is Test {
         assertEq(inToken, address(tokenIn), "Incorrect tokenIn for multi hop");
     }
 
-    // function test_decodeTokenOutTokenInUniswap() public view {
-    //     bytes memory singleHopPath = abi.encode(address(tokenOut), uint24(3000), address(tokenIn));
-
-    //     (address outToken, address inToken) =
-    //         harnessRouter.exposed_decodeTokenOutTokenInUniswap(singleHopPath, YodlUniswapRouter.SwapType.SINGLE);
-
-    //     assertEq(outToken, address(tokenOut), "Incorrect tokenOut for single hop");
-    //     assertEq(inToken, address(tokenIn), "Incorrect tokenIn for single hop");
-    // }
-
-    // function test_decodeSinglePoolFee() public {
-    //     bytes memory path = abi.encodePacked(address(tokenOut), uint24(3000), address(tokenIn));
-    //     uint24 fee = router.exposed_decodeSinglePoolFee(path);
-    //     assertEq(fee, 3000, "Incorrect pool fee decoded");
-    // }
+    function test_decodeSinglePoolFee() public view {
+        bytes memory path = abi.encode(address(tokenOut), uint24(3000), address(tokenIn));
+        uint24 fee = harnessRouter.exposed_decodeSinglePoolFee(path);
+        
+        assertEq(fee, 3000, "Incorrect pool fee decoded");
+    }
 
     // function test_yodlWithUniswap_WithExtraFee() public {
     //     address extraFeeReceiver = address(0x3);
