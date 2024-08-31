@@ -19,7 +19,8 @@ contract YodlUniswapRouterTest is Test {
     MockERC20 public tokenBase;
     address extraFeeAddress;
     bytes32 defaultMemo;
-    uint24 poolFee;
+    uint24 poolFee1;
+    uint24 poolFee2;
     uint256 amountIn;
     uint256 amountOut;
     address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
@@ -38,7 +39,8 @@ contract YodlUniswapRouterTest is Test {
         tokenA = new MockERC20("Token A", "TKA", 18);
         tokenB = new MockERC20("Token B", "TKB", 18);
         tokenBase = new MockERC20("Token Base", "TBASE", 18);
-        poolFee = uint24(3000); // 3%
+        poolFee1 = uint24(2330); // 3%
+        poolFee2 = uint24(4530); // 2%
         amountIn = 199 ether;
         amountOut = 90 ether;
         uint256 decimals = 8;
@@ -78,10 +80,10 @@ contract YodlUniswapRouterTest is Test {
         YodlUniswapRouter.SwapType swapType;
 
         if (isSingleHop) {
-            path = abi.encode(USDC, poolFee, address(tokenA));
+            path = abi.encode(USDC, poolFee1, address(tokenA));
             swapType = YodlUniswapRouter.SwapType.SINGLE;
         } else {
-            path = abi.encode(USDC, poolFee, address(tokenBase), poolFee, address(tokenA));
+            path = abi.encode(USDC, poolFee2, address(tokenBase), poolFee1, address(tokenA));
             swapType = YodlUniswapRouter.SwapType.MULTI;
         }
 
@@ -101,12 +103,12 @@ contract YodlUniswapRouterTest is Test {
         });
     }
 
-    /* Test functions */
+    /* yodlWithUniswap tests   */
 
     /* 
     * Should revert with custom message if uniswap router is not set
     */
-    function test_NoUniswapRouter() public {
+    function test_yodlWithUniswap_NoUniswapRouter() public {
         harnessRouter.setUniswapRouter(address(0));
 
         YodlUniswapRouter.YodlUniswapParams memory singleParams = createYodlUniswapParams(true);
@@ -116,7 +118,8 @@ contract YodlUniswapRouterTest is Test {
     }
 
     /* 
-    * Single hop with 1 Chainlink price feed, USDC to tokenA
+    * Single hop with 1 Chainlink price feed, USDC to tokenA, with memo
+    * Tests sender balance and emissions
     */
     function test_yodlWithUniswap_SingleHop() public {
         vm.mockCall(
@@ -124,11 +127,10 @@ contract YodlUniswapRouterTest is Test {
         );
 
         uint256 senderBalanceBefore = tokenA.balanceOf(SENDER);
-
-        YodlUniswapRouter.YodlUniswapParams memory singleParams = createYodlUniswapParams(true);
+        YodlUniswapRouter.YodlUniswapParams memory yodlUniswapParams = createYodlUniswapParams(true);
 
         /* 
-        * NB: The expected values are currently hardcoded based on singleParams values.
+        * NB: The expected values are currently hardcoded based on yodlUniswapParams values.
         * To make them dynamic, call exchangeRate (pricesExpected) transferFee (outAmountGrossExpected, totalFeeExpected)
         */
         int256[2] memory pricesExpected = [int256(106570000), int256(0)];
@@ -137,20 +139,65 @@ contract YodlUniswapRouterTest is Test {
 
         vm.expectEmit(true, true, true, true);
         emit AbstractYodlRouter.Convert(
-            singleParams.priceFeeds[0].feedAddress, singleParams.priceFeeds[1].feedAddress, pricesExpected[0], int256(0)
+            yodlUniswapParams.priceFeeds[0].feedAddress,
+            yodlUniswapParams.priceFeeds[1].feedAddress,
+            pricesExpected[0],
+            int256(0)
         );
 
         vm.expectEmit(true, true, true, true);
         emit AbstractYodlRouter.Yodl(SENDER, RECEIVER, USDC, outAmountGrossExpected, totalFeeExpected, defaultMemo);
 
         vm.prank(SENDER, SENDER);
-        uint256 amountSpent = harnessRouter.yodlWithUniswap(singleParams);
+        uint256 amountSpent = harnessRouter.yodlWithUniswap(yodlUniswapParams);
 
         assertEq(senderBalanceBefore - tokenA.balanceOf(SENDER), amountIn, "Incorrect amount spent");
         assertEq(amountSpent, amountIn, "Incorrect amount spent");
 
         // NB: To assert other balances we need to either mock the uniswap contract or run on forked mainnet
     }
+
+    /* 
+    * Multi hop with 1 Chainlink price feed, USDC to tokenA, with memo
+    * Tests sender balance and emissions
+    */
+    function test_yodlWithUniswap_MultiHop() public {
+        vm.mockCall(
+            uniswapRouterAddress, abi.encodeWithSelector(IV3SwapRouter.exactOutput.selector), abi.encode(amountIn)
+        );
+
+        uint256 senderBalanceBefore = tokenA.balanceOf(SENDER);
+        YodlUniswapRouter.YodlUniswapParams memory yodlUniswapParams = createYodlUniswapParams(false);
+
+        /* 
+        * NB: The expected values are currently hardcoded based on yodlUniswapParams values.
+        * To make them dynamic, call exchangeRate (pricesExpected) transferFee (outAmountGrossExpected, totalFeeExpected)
+        */
+        int256[2] memory pricesExpected = [int256(106570000), int256(0)];
+        uint256 outAmountGrossExpected = 95913000000000000000;
+        uint256 totalFeeExpected = 191826000000000000;
+
+        vm.expectEmit(true, true, true, true);
+        emit AbstractYodlRouter.Convert(
+            yodlUniswapParams.priceFeeds[0].feedAddress,
+            yodlUniswapParams.priceFeeds[1].feedAddress,
+            pricesExpected[0],
+            int256(0)
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit AbstractYodlRouter.Yodl(SENDER, RECEIVER, USDC, outAmountGrossExpected, totalFeeExpected, defaultMemo);
+
+        vm.prank(SENDER, SENDER);
+        uint256 amountSpent = harnessRouter.yodlWithUniswap(yodlUniswapParams);
+
+        assertEq(senderBalanceBefore - tokenA.balanceOf(SENDER), amountIn, "Incorrect amount spent");
+        assertEq(amountSpent, amountIn, "Incorrect amount spent");
+
+        // NB: To assert other balances we need to either mock the uniswap contract or run on forked mainnet
+    }
+
+    /* Helper functions tests */
 
     function test_decodeTokenOutTokenInUniswap() public view {
         /* Test single hop */
