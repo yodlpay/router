@@ -103,6 +103,9 @@ contract YodlUniswapRouterTest is Test {
 
     /* Test functions */
 
+    /* 
+    * Single hop with 1 Chainlink price feed, USDC to tokenA
+    */
     function test_yodlWithUniswap_SingleHop() public {
         vm.mockCall(
             uniswapRouterAddress, abi.encodeWithSelector(IV3SwapRouter.exactOutputSingle.selector), abi.encode(amountIn)
@@ -111,6 +114,23 @@ contract YodlUniswapRouterTest is Test {
         uint256 senderBalanceBefore = tokenA.balanceOf(SENDER);
 
         YodlUniswapRouter.YodlUniswapParams memory singleParams = createYodlUniswapParams(true);
+
+        /* 
+        * NB: The expected values are currently hardcoded based on singleParams values.
+        * To make them dynamic, call exchangeRate (pricesExpected) transferFee (outAmountGrossExpected, totalFeeExpected)
+        */
+
+        int256[2] memory pricesExpected = [int256(106570000), int256(0)];
+        uint256 outAmountGrossExpected = 95913000000000000000;
+        uint256 totalFeeExpected = 191826000000000000;
+
+        vm.expectEmit(true, true, true, true);
+        emit AbstractYodlRouter.Convert(
+            singleParams.priceFeeds[0].feedAddress, singleParams.priceFeeds[1].feedAddress, pricesExpected[0], int256(0)
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit AbstractYodlRouter.Yodl(SENDER, RECEIVER, USDC, outAmountGrossExpected, totalFeeExpected, defaultMemo);
 
         vm.prank(SENDER, SENDER);
         uint256 amountSpent = harnessRouter.yodlWithUniswap(singleParams);
