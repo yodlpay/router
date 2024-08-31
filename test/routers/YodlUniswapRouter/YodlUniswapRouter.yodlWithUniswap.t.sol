@@ -120,6 +120,9 @@ contract YodlUniswapRouterTest is Test {
     /* 
     * Single hop with 1 Chainlink price feed, USDC to tokenA, with memo
     * Tests sender balance and emissions
+    * TODO: convert to fuzz - parameterize amointIn, amountOut, memo (bool + if - defautmemo else - "") , feeBps etc. 
+    ** This requires update to createYodlUniswapParams or deleting it and creating the struct directly in test functions.
+    ** Also requires calls to exchangeRate and transferFee to get expected emit values.
     */
     function test_yodlWithUniswap_SingleHop() public {
         vm.mockCall(
@@ -160,6 +163,7 @@ contract YodlUniswapRouterTest is Test {
     /* 
     * Multi hop with 1 Chainlink price feed, USDC to tokenA, with memo
     * Tests sender balance and emissions
+    ** TODO: see test_yodlWithUniswap_SingleHop
     */
     function test_yodlWithUniswap_MultiHop() public {
         vm.mockCall(
