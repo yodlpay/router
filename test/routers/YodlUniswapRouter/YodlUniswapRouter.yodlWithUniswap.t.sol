@@ -104,6 +104,18 @@ contract YodlUniswapRouterTest is Test {
     /* Test functions */
 
     /* 
+    * Should revert with custom message if uniswap router is not set
+    */
+    function test_NoUniswapRouter() public {
+        harnessRouter.setUniswapRouter(address(0));
+
+        YodlUniswapRouter.YodlUniswapParams memory singleParams = createYodlUniswapParams(true);
+
+        vm.expectRevert("uniswap router not present");
+        harnessRouter.yodlWithUniswap(singleParams);
+    }
+
+    /* 
     * Single hop with 1 Chainlink price feed, USDC to tokenA
     */
     function test_yodlWithUniswap_SingleHop() public {
@@ -119,7 +131,6 @@ contract YodlUniswapRouterTest is Test {
         * NB: The expected values are currently hardcoded based on singleParams values.
         * To make them dynamic, call exchangeRate (pricesExpected) transferFee (outAmountGrossExpected, totalFeeExpected)
         */
-
         int256[2] memory pricesExpected = [int256(106570000), int256(0)];
         uint256 outAmountGrossExpected = 95913000000000000000;
         uint256 totalFeeExpected = 191826000000000000;
