@@ -19,11 +19,14 @@ contract YodlUniswapRouterHarness is YodlUniswapRouter, AbstractYodlRouterHarnes
         return decodeTokenOutTokenInUniswap(path, swapType);
     }
 
+    /* Expose internal functions */
+
     function exposed_decodeSinglePoolFee(bytes memory path) external pure returns (uint24) {
         return decodeSinglePoolFee(path);
     }
 
     /* Override verifyRateSignature to resolve diamond inheritance */
+
     function verifyRateSignature(PriceFeed calldata priceFeed)
         public
         view
@@ -31,5 +34,11 @@ contract YodlUniswapRouterHarness is YodlUniswapRouter, AbstractYodlRouterHarnes
         returns (bool)
     {
         return AbstractYodlRouterHarness.verifyRateSignature(priceFeed);
+    }
+
+    /* Helper functions */
+
+    function setUniswapRouter(address _newUniswapRouter) external {
+        uniswapRouter = ISwapRouter02(_newUniswapRouter);
     }
 }
