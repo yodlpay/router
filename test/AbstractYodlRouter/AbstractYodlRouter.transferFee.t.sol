@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
-import {MockERC20} from "@test/AbstractYodlRouter/shared/MockERC20.sol";
+import {MyMockERC20} from "@test/AbstractYodlRouter/shared/MyMockERC20.sol";
 
 contract YodlAbstractRouterTest is Test {
     AbstractYodlRouterHarness abstractRouter;
@@ -38,7 +38,7 @@ contract YodlAbstractRouterTest is Test {
 
         address from = address(abstractRouter);
         address to = address(1);
-        MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18);
+        MyMockERC20 tokenA = new MyMockERC20("MockTokenA", "MTA", 18);
 
         deal(address(tokenA), address(abstractRouter), 1e68, true); // Give the YodlRouter some tokens
         uint256 fromBalanceBefore = tokenA.balanceOf(from);
@@ -61,7 +61,7 @@ contract YodlAbstractRouterTest is Test {
 
         address from = address(1);
         address to = address(2);
-        MockERC20 tokenA = new MockERC20("MockTokenA", "MTA", 18);
+        MyMockERC20 tokenA = new MyMockERC20("MockTokenA", "MTA", 18);
 
         deal(address(tokenA), address(from), 1e68, true); // Give from address some tokens
 

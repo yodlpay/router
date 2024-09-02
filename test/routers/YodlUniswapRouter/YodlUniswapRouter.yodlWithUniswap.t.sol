@@ -8,15 +8,15 @@ import {Test, console} from "forge-std/Test.sol";
 
 import {YodlUniswapRouter} from "@src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouter} from "@src/AbstractYodlRouter.sol";
-import {MockERC20} from "@test/AbstractYodlRouter/shared/MockERC20.sol";
+import {MyMockERC20} from "@test/AbstractYodlRouter/shared/MyMockERC20.sol";
 import {YodlUniswapRouterHarness} from "./shared/YodlUniswapRouterHarness.t.sol";
 
 contract YodlUniswapRouterTest is Test {
     YodlUniswapRouterHarness public harnessRouter;
     address constant uniswapRouterAddress = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-    MockERC20 public tokenA;
-    MockERC20 public tokenB;
-    MockERC20 public tokenBase;
+    MyMockERC20 public tokenA;
+    MyMockERC20 public tokenB;
+    MyMockERC20 public tokenBase;
     address extraFeeAddress;
     bytes32 defaultMemo;
     uint24 poolFee1;
@@ -36,9 +36,9 @@ contract YodlUniswapRouterTest is Test {
         harnessRouter = new YodlUniswapRouterHarness(uniswapRouterAddress);
         extraFeeAddress = address(0);
         defaultMemo = "hi";
-        tokenA = new MockERC20("Token A", "TKA", 18);
-        tokenB = new MockERC20("Token B", "TKB", 18);
-        tokenBase = new MockERC20("Token Base", "TBASE", 18);
+        tokenA = new MyMockERC20("Token A", "TKA", 18);
+        tokenB = new MyMockERC20("Token B", "TKB", 18);
+        tokenBase = new MyMockERC20("Token Base", "TBASE", 18);
         poolFee1 = uint24(3000); // 3%
         poolFee2 = uint24(2000); // 2%
         amountIn = 199 ether;
