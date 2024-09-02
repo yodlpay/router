@@ -83,7 +83,7 @@ contract YodlUniswapRouterForkTest is Test {
         uint256 senderBalanceBefore = daiToken.balanceOf(SENDER);
         uint256 contractBalanceBefore = usdcToken.balanceOf(address(harnessRouter));
 
-        vm.startPrank(SENDER, SENDER);
+        vm.startPrank(SENDER, SENDER); // sets msg.sender and tx.origin to SENDER for all subsequent calls
         daiToken.approve(address(harnessRouter), type(uint256).max);
         uint256 amountSpent = harnessRouter.yodlWithUniswap(params); // Call router
         vm.stopPrank();
