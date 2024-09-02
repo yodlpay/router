@@ -183,33 +183,30 @@ contract YodlAbstractRouterTest is Test {
 
     /* 
     * Scenario: Only PriceFeed[0] is passed, testing all pricefeed decimals between 6-18
-    * Manual fuzzing as range is small.
     */
-    function testFuzz_ExchangeRate_PricefeedDecimals() public {
+    function testFuzz_ExchangeRate_PricefeedDecimals(uint256 decimals) public {
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedChainlink, priceFeedZeroValues];
         uint256 amount = 999;
+        decimals = bound(decimals, 6, 18);
 
-        // manually fuzzing
-        for (uint8 decimals = 6; decimals <= 18; decimals++) {
-            int256 price = int256(uint256(1_0657) * uint256(decimals)); // the contract should return an int256
+        int256 price = int256(uint256(1_0657) * uint256(decimals)); // the contract should return an int256
 
-            vm.mockCall(
-                priceFeeds[0].feedAddress,
-                abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
-                abi.encode(decimals)
-            );
+        vm.mockCall(
+            priceFeeds[0].feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
+            abi.encode(decimals)
+        );
 
-            vm.mockCall(
-                priceFeeds[0].feedAddress,
-                abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-                abi.encode(0, price, 0, 0, 0)
-            );
+        vm.mockCall(
+            priceFeeds[0].feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+            abi.encode(0, price, 0, 0, 0)
+        );
 
-            (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
 
-            assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to expected amount");
-            assertEq(prices[0], price, "prices[0] not equal to price");
-            assertEq(prices[1], 0, "prices[1] != 0");
-        }
+        assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to expected amount");
+        assertEq(prices[0], price, "prices[0] not equal to price");
+        assertEq(prices[1], 0, "prices[1] != 0");
     }
 }
