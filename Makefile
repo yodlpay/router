@@ -33,13 +33,13 @@ format :; forge fmt
 test :; forge test --no-match-test Fork
 
 # integration tests
-fork-test :; forge test --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER} --match-test Fork
+test-fork :; forge test --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER} --match-test Fork
 
 coverage :; forge coverage --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER}
 
 coverage-debug :; forge coverage --fork-url ${RPC_URL} --fork-block-number ${BLOCK_NUMBER} --report debug
 
-test-all: test fork-test
+test-all: test test-fork
 
 start-anvil :; nohup anvil --fork-url=${RPC_URL} --fork-block-number ${BLOCK_NUMBER} &
 
@@ -51,11 +51,14 @@ slither :; slither ./src
 
 anvil :; anvil -m 'test test test test test test test test test test test junk'
 
-NETWORK_ARGS := --rpc-url http://localhost:8545 --private-key $(DEFAULT_ANVIL_KEY) --broadcast
 
-ifeq ($(findstring --network sepolia,$(ARGS)),--network sepolia)
-	NETWORK_ARGS := --rpc-url $(SEPOLIA_RPC_URL) --private-key $(PRIVATE_KEY) --broadcast --verify --etherscan-api-key $(ETHERSCAN_API_KEY) -vvvv
-endif
+# This is NOT READY YET but can be used as a template for future configurations.
+# Will deploy the YodlUniswapHarness contract to anvil or Sepolia (if --network sepolia is passed)
+# NETWORK_ARGS := --rpc-url http://localhost:8545 --private-key $(DEFAULT_ANVIL_KEY) --broadcast
 
-deploy:
-	@forge script script/DeployRaffle.s.sol:DeployRaffle $(NETWORK_ARGS)
+# ifeq ($(findstring --network sepolia,$(ARGS)),--network sepolia)
+# 	NETWORK_ARGS := --rpc-url $(SEPOLIA_RPC_URL) --private-key $(PRIVATE_KEY) --broadcast --verify --etherscan-api-key $(ETHERSCAN_API_KEY) -vvvv
+# endif
+
+# deploy:
+# 	@forge script script/DeployYodlUniswapRouter.s.sol:DeployYodlUniswapRouter $(NETWORK_ARGS)
