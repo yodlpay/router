@@ -69,7 +69,7 @@ contract HelperConfig is CodeConstants, Script {
             link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
             usdc: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
             dai: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
-            account: DEFAULT_ANVIL_USER
+            account: RICH_USER // Not sure if rich on Sepolia
         });
     }
 
@@ -83,7 +83,7 @@ contract HelperConfig is CodeConstants, Script {
         console2.log("Make sure this was intentional");
         vm.startBroadcast();
         // Deploy uniswap router v3 mock (if possible)
-        address uniswapRouterV3Mock = vm.addr(0x1); // shold deply cintract
+        address uniswapRouterV3Mock = vm.addr(0x1); // shold deply contract
         //  VRFCoordinatorV2_5Mock uniswapRouterV3Mock =
         //     new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UINT_LINK);
         MyMockERC20 link = new MyMockERC20("Chainlink Token", "LINK", 18);

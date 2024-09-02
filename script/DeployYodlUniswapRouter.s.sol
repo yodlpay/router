@@ -7,8 +7,6 @@ import {HelperConfig} from "@script/HelperConfig.s.sol";
 import {YodlUniswapRouterHarness} from "@test/routers/YodlUniswapRouter/shared/YodlUniswapRouterHarness.t.sol";
 
 contract DeployYodlUniswapRouter is Script {
-    address constant RICH_USER = 0x28C6c06298d514Db089934071355E5743bf21d60; // Binance 14
-
     function run() external returns (YodlUniswapRouterHarness, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig(); // This comes with our mocks!
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
