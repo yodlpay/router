@@ -173,9 +173,9 @@ contract YodlAbstractRouterTest is Test {
     * NB: May be redundant if verifyRateSignature is tested elsewhere (which is likely will)
     * Scenorio: Pricefeed[0] is external, but the signature is invalid
     */
-    function q() public {
+    function test_ExchangeRate_Revert_SignatureInvalid() public {
         uint256 amount = 999;
-        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedZeroValues];
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedZeroValues]; // priceFeedExternal.signature: ""
 
         vm.expectRevert("Invalid signature for external price feed");
         abstractRouter.exchangeRate(priceFeeds, amount);
