@@ -39,8 +39,8 @@ contract YodlUniswapRouterTest is Test {
         tokenA = new MockERC20("Token A", "TKA", 18);
         tokenB = new MockERC20("Token B", "TKB", 18);
         tokenBase = new MockERC20("Token Base", "TBASE", 18);
-        poolFee1 = uint24(2330); // 3%
-        poolFee2 = uint24(4530); // 2%
+        poolFee1 = uint24(3000); // 3%
+        poolFee2 = uint24(2000); // 2%
         amountIn = 199 ether;
         amountOut = 90 ether;
         uint256 decimals = 8;
