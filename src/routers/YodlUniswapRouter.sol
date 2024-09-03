@@ -41,7 +41,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
     /// of slippage are in terms of the token in.
     /// @param params Struct that contains all the relevant parameters. See `YodlUniswapParams` for more details.
     /// @return The amount spent in terms of token in by Uniswap to complete this payment
-    function yodlWithUniswap(YodlUniswapParams calldata params) external payable returns (uint256) {
+    function yodlWithUniswap(YodlUniswapParams calldata params) public payable returns (uint256) {
         require(address(uniswapRouter) != address(0), "uniswap router not present");
         (address tokenOut, address tokenIn) = decodeTokenOutTokenInUniswap(params.path, params.swapType);
         uint256 inAmount;
@@ -61,7 +61,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
         if (params.yAppList.length > 0) {
             for (uint256 i = 0; i < params.yAppList.length; i++) {
                 IBeforeHook(params.yAppList[i].yApp).beforeHook(
-                    tx.origin,
+                    msg.sender,
                     params.receiver,
                     outAmountGross,
                     tokenOut,
@@ -81,7 +81,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
             tokenIn = address(wrappedNativeToken);
         } else {
             // Transfer the ERC20 token from the sender to the YodlRouter
-            TransferHelper.safeTransferFrom(tokenIn, tx.origin, address(this), params.amountIn);
+            TransferHelper.safeTransferFrom(tokenIn, msg.sender, address(this), params.amountIn);
         }
         TransferHelper.safeApprove(tokenIn, address(uniswapRouter), params.amountIn);
 
