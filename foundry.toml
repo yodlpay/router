@@ -5,5 +5,7 @@ libs = ["lib"]
 solc-version = "0.8.26"
 optimizer = true
 optimizer-runs = 200
-show-logs = true
+
+[fuzz]
+show_logs = true
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
