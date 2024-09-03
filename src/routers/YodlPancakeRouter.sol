@@ -14,11 +14,6 @@ abstract contract YodlPancakeRouter is YodlUniswapRouter {
     /// @param params Struct that contains all the relevant parameters. See `YodlUniswapParams` for more details.
     /// @return The amount spent in terms of token in by Uniswap to complete this payment
     function yodlWithPancake(YodlUniswapParams calldata params) external payable returns (uint256) {
-        // return yodlWithUniswap{value: msg.value}(params);
-        // Error (2193): Function call options can only be set on external function calls or contract creations:
-        // FIXME: Temporary workaround to prevent native token swaps.
-
-        require(msg.value == 0, "native token swaps unsupported");
         return yodlWithUniswap(params);
     }
 }
