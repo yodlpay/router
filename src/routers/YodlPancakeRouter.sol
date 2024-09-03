@@ -14,6 +14,6 @@ abstract contract YodlPancakeRouter is YodlUniswapRouter {
     /// @param params Struct that contains all the relevant parameters. See `YodlUniswapParams` for more details.
     /// @return The amount spent in terms of token in by Uniswap to complete this payment
     function yodlWithPancake(YodlUniswapParams calldata params) external payable returns (uint256) {
-        return this.yodlWithUniswap{value: msg.value}(params);
+        return yodlWithUniswap(params);
     }
 }
