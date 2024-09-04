@@ -38,7 +38,7 @@ contract YodlCurveRouterForkTest is Test {
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
         curveRouterNG = config.curveRouterNG;
         SENDER = config.account;
-        usdtToken = IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+        usdtToken = IERC20(config.usdt);
         usdcToken = IERC20(config.usdc);
     }
 
