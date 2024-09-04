@@ -11,7 +11,7 @@ contract YodlRouter is YodlTransferRouter, YodlCurveRouter, YodlUniswapRouter {
     constructor()
         AbstractYodlRouter()
         YodlTransferRouter()
-        YodlCurveRouter(0x2a426b3Bb4fa87488387545f15D01d81352732F9)
+        YodlCurveRouter(0x0DCDED3545D565bA3B19E683431381007245d983)
         YodlUniswapRouter(0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45)
     {
         version = "vSam";
