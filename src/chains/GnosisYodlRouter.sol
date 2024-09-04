@@ -10,7 +10,7 @@ contract YodlRouter is YodlTransferRouter, YodlCurveRouter {
     constructor()
         AbstractYodlRouter()
         YodlTransferRouter()
-        YodlCurveRouter(0xE6358f6a45B502477e83CC1CDa759f540E4459ee)
+        YodlCurveRouter(0x0DCDED3545D565bA3B19E683431381007245d983)
     {
         version = "vSam";
         yodlFeeBps = 20;
