@@ -18,6 +18,7 @@ contract HelperConfig is CodeConstants, Script {
 
     struct NetworkConfig {
         address uniswapRouterV3;
+        address curveRouterNG;
         address link;
         address usdc;
         address dai;
@@ -55,6 +56,7 @@ contract HelperConfig is CodeConstants, Script {
     function getMainnetEthConfig() public pure returns (NetworkConfig memory mainnetNetworkConfig) {
         mainnetNetworkConfig = NetworkConfig({
             uniswapRouterV3: 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45, // SwapRouter02
+            curveRouterNG: 0x16C6521Dff6baB339122a0FE25a9116693265353, // v1.1
             link: 0x514910771AF9Ca656af840dff83E8264EcF986CA,
             usdc: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
             dai: 0x6B175474E89094C44Da98b954EedeAC495271d0F,
@@ -66,6 +68,7 @@ contract HelperConfig is CodeConstants, Script {
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory sepoliaNetworkConfig) {
         sepoliaNetworkConfig = NetworkConfig({
             uniswapRouterV3: 0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E, // SwapRouter02
+            curveRouterNG: address(0), // Not deployed
             link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
             usdc: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
             dai: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
@@ -84,6 +87,7 @@ contract HelperConfig is CodeConstants, Script {
         vm.startBroadcast();
         // Deploy uniswap router v3 mock (if possible)
         address uniswapRouterV3Mock = vm.addr(0x1); // shold deply contract
+        address curveRouterNGMock = vm.addr(0x1); // shold deply contract
         //  VRFCoordinatorV2_5Mock uniswapRouterV3Mock =
         //     new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UINT_LINK);
         MyMockERC20 link = new MyMockERC20("Chainlink Token", "LINK", 18);
@@ -93,6 +97,7 @@ contract HelperConfig is CodeConstants, Script {
 
         localNetworkConfig = NetworkConfig({
             uniswapRouterV3: address(uniswapRouterV3Mock),
+            curveRouterNG: address(curveRouterNGMock),
             link: address(link),
             usdc: address(usdc),
             dai: address(dai),

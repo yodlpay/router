@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AbstractYodlRouter} from "@src/AbstractYodlRouter.sol";
 import {YodlUniswapRouter} from "@src/routers/YodlUniswapRouter.sol";
 import {HelperConfig} from "@script/HelperConfig.s.sol";
-import {DeployYodlUniswapRouter} from "@script/DeployYodlUniswapRouter.s.sol";
+import {DeployHarnessRouter} from "@script/DeployHarnessRouter.s.sol";
 import {YodlUniswapRouterHarness} from "./shared/YodlUniswapRouterHarness.t.sol";
 
 contract YodlUniswapRouterForkTest is Test {
@@ -30,8 +30,8 @@ contract YodlUniswapRouterForkTest is Test {
     uint256 constant baseFeeBps = 20;
 
     function setUp() external {
-        DeployYodlUniswapRouter deployer = new DeployYodlUniswapRouter();
-        (harnessRouter, helperConfig) = deployer.run();
+        DeployHarnessRouter deployer = new DeployHarnessRouter();
+        (harnessRouter,, helperConfig) = deployer.run(DeployHarnessRouter.RouterType.Uniswap);
 
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
         uniswapRouter = config.uniswapRouterV3;
