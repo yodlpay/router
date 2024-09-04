@@ -22,6 +22,7 @@ contract HelperConfig is CodeConstants, Script {
         address link;
         address usdc;
         address dai;
+        address usdt;
         address account;
     }
 
@@ -60,6 +61,7 @@ contract HelperConfig is CodeConstants, Script {
             link: 0x514910771AF9Ca656af840dff83E8264EcF986CA,
             usdc: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
             dai: 0x6B175474E89094C44Da98b954EedeAC495271d0F,
+            usdt: 0xdAC17F958D2ee523a2206206994597C13D831ec7,
             // account: DEFAULT_ANVIL_USER
             account: RICH_USER
         });
@@ -72,6 +74,7 @@ contract HelperConfig is CodeConstants, Script {
             link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
             usdc: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
             dai: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
+            usdt: address(0), // Not found
             account: RICH_USER // Not sure if rich on Sepolia
         });
     }
@@ -93,6 +96,7 @@ contract HelperConfig is CodeConstants, Script {
         MyMockERC20 link = new MyMockERC20("Chainlink Token", "LINK", 18);
         MyMockERC20 usdc = new MyMockERC20("USD Coin", "USDC", 6);
         MyMockERC20 dai = new MyMockERC20("Dai Stablecoin", "DAI", 18);
+        MyMockERC20 usdt = new MyMockERC20("Tether USD", "USDT", 6);
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({
@@ -101,6 +105,7 @@ contract HelperConfig is CodeConstants, Script {
             link: address(link),
             usdc: address(usdc),
             dai: address(dai),
+            usdt: address(usdt),
             account: DEFAULT_ANVIL_USER
         });
         vm.deal(localNetworkConfig.account, 100 ether); // redundant?
