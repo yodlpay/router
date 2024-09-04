@@ -5,7 +5,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // Mock USDC contract
-contract MockERC20 is ERC20, Ownable {
+contract MyMockERC20 is ERC20, Ownable {
     uint256 immutable _initial_supply;
     uint256 immutable decimal;
 
