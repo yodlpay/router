@@ -93,7 +93,6 @@ contract YodlUniswapRouterForkTest is Test {
         uint256 contractBalanceAfter = usdcToken.balanceOf(address(harnessRouter));
         uint256 contractBalanceAfterDAI = daiToken.balanceOf(address(harnessRouter));
 
-        /* Pass */
         assertEq(params.amountIn, amountSpent + contractBalanceAfterDAI, "Incorrect amount spent");
         assertEq(senderBalanceAfter, senderBalanceBefore - params.amountIn, "Incorrect sender balance");
         assertEq(contractBalanceAfter, contractBalanceBefore + fee, "Incorrect contract balance");
