@@ -13,8 +13,7 @@ import {MyMockERC20} from "@test/AbstractYodlRouter/shared/MyMockERC20.sol";
 
 contract YodlCurveRouterTest is Test {
     YodlCurveRouterHarness public harnessRouter;
-    address constant curveRouterAddress =
-        0xE592427A0AEce92De3Edee1F18E0157C05861564;
+    address constant curveRouterAddress = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
 
     MyMockERC20 public tokenA;
     MyMockERC20 public tokenB;
@@ -54,9 +53,7 @@ contract YodlCurveRouterTest is Test {
 
     /* Helper functions */
 
-    function createYodlCurveParmas(
-        bool isSingleHop
-    ) internal view returns (YodlCurveRouter.YodlCurveParams memory) {
+    function createYodlCurveParmas(bool isSingleHop) internal view returns (YodlCurveRouter.YodlCurveParams memory) {
         address[11] memory route = [
             address(0),
             address(0),
@@ -77,30 +74,23 @@ contract YodlCurveRouterTest is Test {
             [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)],
             [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
         ];
-        address[5] memory pools = [
-            address(0),
-            address(0),
-            address(0),
-            address(0),
-            address(0)
-        ];
+        address[5] memory pools = [address(0), address(0), address(0), address(0), address(0)];
 
-        return
-            YodlCurveRouter.YodlCurveParams({
-                sender: SENDER,
-                receiver: RECEIVER,
-                amountIn: amountIn,
-                amountOut: amountOut,
-                memo: defaultMemo,
-                route: route,
-                swapParams: swapParams,
-                pools: pools,
-                priceFeeds: [priceFeedNULL, priceFeedNULL],
-                extraFeeReceiver: extraFeeAddress,
-                extraFeeBps: 0,
-                yd: 0,
-                yAppList: new YodlCurveRouter.YApp[](0)
-            });
+        return YodlCurveRouter.YodlCurveParams({
+            sender: SENDER,
+            receiver: RECEIVER,
+            amountIn: amountIn,
+            amountOut: amountOut,
+            memo: defaultMemo,
+            route: route,
+            swapParams: swapParams,
+            pools: pools,
+            priceFeeds: [priceFeedNULL, priceFeedNULL],
+            extraFeeReceiver: extraFeeAddress,
+            extraFeeBps: 0,
+            yd: 0,
+            yAppList: new YodlCurveRouter.YApp[](0)
+        });
     }
 
     /* yodlWithUniswap tests   */
@@ -111,8 +101,7 @@ contract YodlCurveRouterTest is Test {
     function test_yodlWithCurve_NoRouter() public {
         harnessRouter.setCurveRouter(address(0));
 
-        YodlCurveRouter.YodlCurveParams
-            memory singleParams = createYodlCurveParmas(true);
+        YodlCurveRouter.YodlCurveParams memory singleParams = createYodlCurveParmas(true);
 
         vm.expectRevert("curve router not present");
         harnessRouter.yodlWithCurve(singleParams);
