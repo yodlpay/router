@@ -5,6 +5,7 @@ pragma solidity ^0.8.26;
 
 import "../routers/YodlTransferRouter.sol";
 import "../routers/YodlPancakeRouter.sol";
+import "../routers/YodlCurveRouter.sol";
 
 contract YodlRouter is YodlTransferRouter, YodlCurveRouter, YodlPancakeRouter {
     constructor()
