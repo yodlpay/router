@@ -8,16 +8,17 @@ import {Test, console} from "forge-std/Test.sol";
 
 import {YodlCurveRouter} from "@src/routers/YodlCurveRouter.sol";
 import {AbstractYodlRouter} from "@src/AbstractYodlRouter.sol";
-import {MockERC20} from "@test/AbstractYodlRouter/shared/MockERC20.sol";
 import {YodlCurveRouterHarness} from "./shared/YodlCurveRouterHarness.t.sol";
+import {MyMockERC20} from "@test/AbstractYodlRouter/shared/MyMockERC20.sol";
 
 contract YodlCurveRouterTest is Test {
     YodlCurveRouterHarness public harnessRouter;
-    address constant curveRouterAddress = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
+    address constant curveRouterAddress =
+        0xE592427A0AEce92De3Edee1F18E0157C05861564;
 
-    MockERC20 public tokenA;
-    MockERC20 public tokenB;
-    MockERC20 public tokenBase;
+    MyMockERC20 public tokenA;
+    MyMockERC20 public tokenB;
+    MyMockERC20 public tokenBase;
 
     address extraFeeAddress;
     bytes32 defaultMemo;
@@ -37,9 +38,9 @@ contract YodlCurveRouterTest is Test {
         extraFeeAddress = address(0);
 
         defaultMemo = "hi";
-        tokenA = new MockERC20("Token A", "TKA", 18);
-        tokenB = new MockERC20("Token B", "TKB", 18);
-        tokenBase = new MockERC20("Token Base", "TBASE", 18);
+        tokenA = new MyMockERC20("Token A", "TKA", 18);
+        tokenB = new MyMockERC20("Token B", "TKB", 18);
+        tokenBase = new MyMockERC20("Token Base", "TBASE", 18);
 
         amountIn = 199 ether;
         amountOut = 90 ether;
@@ -53,7 +54,9 @@ contract YodlCurveRouterTest is Test {
 
     /* Helper functions */
 
-    function createYodlCurveParmas(bool isSingleHop) internal view returns (YodlCurveRouter.YodlCurveParams memory) {
+    function createYodlCurveParmas(
+        bool isSingleHop
+    ) internal view returns (YodlCurveRouter.YodlCurveParams memory) {
         address[11] memory route = [
             address(0),
             address(0),
@@ -74,23 +77,30 @@ contract YodlCurveRouterTest is Test {
             [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)],
             [uint256(0), uint256(0), uint256(0), uint256(0), uint256(0)]
         ];
-        address[5] memory pools = [address(0), address(0), address(0), address(0), address(0)];
+        address[5] memory pools = [
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0)
+        ];
 
-        return YodlCurveRouter.YodlCurveParams({
-            sender: SENDER,
-            receiver: RECEIVER,
-            amountIn: amountIn,
-            amountOut: amountOut,
-            memo: defaultMemo,
-            route: route,
-            swapParams: swapParams,
-            pools: pools,
-            priceFeeds: [priceFeedNULL, priceFeedNULL],
-            extraFeeReceiver: extraFeeAddress,
-            extraFeeBps: 0,
-            yd: 0,
-            yAppList: new YodlCurveRouter.YApp[](0)
-        });
+        return
+            YodlCurveRouter.YodlCurveParams({
+                sender: SENDER,
+                receiver: RECEIVER,
+                amountIn: amountIn,
+                amountOut: amountOut,
+                memo: defaultMemo,
+                route: route,
+                swapParams: swapParams,
+                pools: pools,
+                priceFeeds: [priceFeedNULL, priceFeedNULL],
+                extraFeeReceiver: extraFeeAddress,
+                extraFeeBps: 0,
+                yd: 0,
+                yAppList: new YodlCurveRouter.YApp[](0)
+            });
     }
 
     /* yodlWithUniswap tests   */
@@ -101,7 +111,8 @@ contract YodlCurveRouterTest is Test {
     function test_yodlWithCurve_NoRouter() public {
         harnessRouter.setCurveRouter(address(0));
 
-        YodlCurveRouter.YodlCurveParams memory singleParams = createYodlCurveParmas(true);
+        YodlCurveRouter.YodlCurveParams
+            memory singleParams = createYodlCurveParmas(true);
 
         vm.expectRevert("curve router not present");
         harnessRouter.yodlWithCurve(singleParams);
@@ -122,7 +133,7 @@ contract YodlCurveRouterTest is Test {
     //     );
 
     //     uint256 senderBalanceBefore = tokenA.balanceOf(SENDER);
-    //     YodlCurveRouter.YodlUniswapParams
+    //     YodlCurveRouter.YodlCurveParams
     //         memory yodlUniswapParams = createYodlCurveParmas(true);
 
     //     /*
