@@ -19,7 +19,8 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
 
         /* Values from Arbitrum miannet?*/
         yodlFeeTreasury = 0x5f0947253a8218894af13438ac2e2E0CeD30d234;
-        wrappedNativeToken = IWETH9(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1); // arbitrum weth
+        // wrappedNativeToken = IWETH9(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1); // arbitrum weth
+        wrappedNativeToken = IWETH9(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // ethereum weth
 
         priceFeedChainlink = AbstractYodlRouter.PriceFeed({
             feedAddress: address(13480),
