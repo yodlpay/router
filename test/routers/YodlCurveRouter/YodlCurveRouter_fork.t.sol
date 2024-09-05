@@ -100,7 +100,7 @@ contract YodlCurveRouterForkTest is Test {
         return YodlCurveRouter.YodlCurveParams({
             sender: SENDER,
             receiver: RECEIVER,
-            // amountIn: 13000_0000000000, // 
+            // amountIn: 13000_0000000000, //
             // amountOut: 308297, // 45,1474
             amountIn: 1.9e18, // 1.9 Eth
             amountOut: 4514740000, // 4514,74 (USDT)
@@ -224,7 +224,7 @@ contract YodlCurveRouterForkTest is Test {
         assertEq(treasuryUSDCAfter, treasuryUSDC + routerUSDC, "Incorrect Treasury Balance");
     }
 
-     /* 
+    /* 
     * Convenience fee in native token should be transfered to yodl yodlFeeTreasury
     * Native --> USDC swap
     * NB: Coppied from above, not modified.
