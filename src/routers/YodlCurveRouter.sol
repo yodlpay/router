@@ -137,7 +137,7 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         address tokenIn = route[0];
         address tokenOut = route[2];
         // Output tokens can be located at indices 2, 4, 6 or 8, if the loop finds nothing, then it is index 2
-        for (uint256 i = 4; i >= 2; i--) {
+        for (uint256 i = 5; i >= 2; i--) {
             if (route[i * 2] != address(0)) {
                 tokenOut = route[i * 2];
                 break;
