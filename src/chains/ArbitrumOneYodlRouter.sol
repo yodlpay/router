@@ -9,7 +9,7 @@ import "../routers/YodlUniswapRouter.sol";
 
 contract YodlRouter is YodlTransferRouter, YodlCurveRouter, YodlUniswapRouter {
     constructor()
-        AbstractYodlRouter(AbstractYodlRouter.ChainType.L2, 0xFdB631F5EE196F0ed6FAa767959853A9F217697D)
+        AbstractYodlRouter()
         YodlTransferRouter()
         YodlCurveRouter(0x2191718CD32d02B8E60BAdFFeA33E4B5DD9A0A0D)
         YodlUniswapRouter(0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45)

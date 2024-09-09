@@ -8,10 +8,7 @@ import {YodlUniswapRouter} from "@src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouterHarness} from "@test/AbstractYodlRouter/shared/AbstractYodlRouterHarness.t.sol";
 
 contract YodlUniswapRouterHarness is YodlUniswapRouter, AbstractYodlRouterHarness {
-    constructor(AbstractYodlRouter.ChainType _chainType, address _sequencerUptimeFeed, address _uniswapRouter)
-        YodlUniswapRouter(_uniswapRouter)
-        AbstractYodlRouterHarness(_chainType, _sequencerUptimeFeed)
-    {}
+    constructor(address _uniswapRouter) YodlUniswapRouter(_uniswapRouter) AbstractYodlRouterHarness() {}
 
     /* Expose internal functions for testing */
     function exposed_decodeTokenOutTokenInUniswap(bytes memory path, SwapType swapType)

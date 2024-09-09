@@ -9,23 +9,13 @@ import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
 abstract contract AbstractYodlRouter {
-    enum ChainType {
-        L1,
-        L2
-    }
-
     string public version;
     address public yodlFeeTreasury;
     uint256 public yodlFeeBps;
     IWETH9 public wrappedNativeToken;
-    ChainType public chainType;
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 public constant MAX_EXTRA_FEE_BPS = 5_000; // 50%
     address public constant RATE_VERIFIER = 0xc71f6e1e4665d319610afA526BE529202cA13bB7;
-    uint256 constant THRESHOLD_MULTIPLIER = 12; // 1.2x multiplier when calculating price feed staleness
-    uint256 constant MULTIPLIER_PRECISION = 10;
-    address immutable sequencerUptimeFeed; // Chainlink L2 sequencer uptime feed, address(0) if not on L2
-    uint256 private constant GRACE_PERIOD_SECONDS = 3600; // Allow transactions again after this many seconds of sequencer uptime
 
     int8 public constant NULL_FEED = 0;
     int8 public constant CHAINLINK_FEED = 1;
@@ -65,10 +55,6 @@ abstract contract AbstractYodlRouter {
         string indexed currency0, address indexed priceFeed1, int256 exchangeRate0, int256 exchangeRate1
     );
 
-    error AbstractYodlRouter__PricefeedStale();
-    error AbstractYodlRouter__SequencerDown();
-    error AbstractYodlRouter__GracePeriodNotOver();
-
     /**
      * @notice Struct to hold the YApp address and the YD ID
      * @param yApp The address of the YApp
@@ -84,7 +70,6 @@ abstract contract AbstractYodlRouter {
     /**
      * @notice Struct to hold the price feed information, it's either Chainlink or external
      * @param feedAddress The address of the Chainlink price feed, ZERO otherwise
-     * @param heartbeat Time in seconds between (forced) Chainlink price feed updates, ZERO otherwise
      * @param feedType The type of the price feed, 1 for Chainlink, 2 for external
      * @param currency The currency of the price feed, if external, ZERO otherwise
      * @param amount The amount to be converted by the price feed exchange rates, if external, ZERO otherwise
@@ -93,21 +78,11 @@ abstract contract AbstractYodlRouter {
      */
     struct PriceFeed {
         address feedAddress;
-        uint256 heartbeat;
         int8 feedType;
         string currency;
         uint256 amount;
         uint256 deadline;
         bytes signature;
-    }
-
-    /**
-     * @notice Constructor for the YodlRouter
-     * @param _sequencerUptimeFeed  The address of the Chainlink L2 sequencer uptime feed, address(0) if not on L2
-     */
-    constructor(ChainType _chainType, address _sequencerUptimeFeed) {
-        chainType = _chainType;
-        sequencerUptimeFeed = _sequencerUptimeFeed;
     }
 
     /// @notice Enables the contract to receive Ether
@@ -178,32 +153,7 @@ abstract contract AbstractYodlRouter {
         } else {
             // Calculate the converted value using price feeds
             decimals = uint256(10 ** uint256(priceFeedOne.decimals()));
-            uint256 updatedAt;
-            (, price,, updatedAt,) = priceFeedOne.latestRoundData();
-
-            // L2s only: check if the sequencer is up
-            // if (sequencerUptimeFeed != address(0)) {
-            if (chainType == ChainType.L2) {
-                (, int256 answer, uint256 startedAt,,) = AggregatorV3Interface(sequencerUptimeFeed).latestRoundData(); // answer: 0 == up, 1 == down
-
-                bool isSequencerUp = answer == 0;
-                if (!isSequencerUp) {
-                    revert AbstractYodlRouter__SequencerDown();
-                }
-
-                // Make sure the grace period has passed after the sequencer is back up.
-                uint256 timeSinceUp = block.timestamp - startedAt;
-                if (timeSinceUp <= GRACE_PERIOD_SECONDS) {
-                    revert AbstractYodlRouter__GracePeriodNotOver();
-                }
-            }
-
-            // check if price feed data is stale
-            uint256 staleNessThreshold = (shouldInverse ? priceFeeds[1].heartbeat : priceFeeds[0].heartbeat)
-                * THRESHOLD_MULTIPLIER / MULTIPLIER_PRECISION;
-            if (block.timestamp - updatedAt > staleNessThreshold) {
-                revert AbstractYodlRouter__PricefeedStale();
-            }
+            (, price,,,) = priceFeedOne.latestRoundData();
             prices[0] = price;
         }
         if (shouldInverse) {
@@ -215,31 +165,7 @@ abstract contract AbstractYodlRouter {
         // We will always divide by the second price feed
         if (address(priceFeedTwo) != address(0)) {
             decimals = uint256(10 ** uint256(priceFeedTwo.decimals()));
-            uint256 updatedAt;
-            (, price,, updatedAt,) = priceFeedTwo.latestRoundData();
-
-            // L2s only: check if the sequencer is up
-            if (chainType == ChainType.L2) {
-                (, int256 answer, uint256 startedAt,,) = AggregatorV3Interface(sequencerUptimeFeed).latestRoundData(); // answer: 0 == up, 1 == down
-
-                bool isSequencerUp = answer == 0;
-                if (!isSequencerUp) {
-                    revert AbstractYodlRouter__SequencerDown();
-                }
-
-                // Make sure the grace period has passed after the sequencer is back up.
-                uint256 timeSinceUp = block.timestamp - startedAt;
-                if (timeSinceUp <= GRACE_PERIOD_SECONDS) {
-                    revert AbstractYodlRouter__GracePeriodNotOver();
-                }
-            }
-
-            // check if price feed data is stale
-            uint256 staleNessThreshold = (shouldInverse ? priceFeeds[1].heartbeat : priceFeeds[0].heartbeat)
-                * THRESHOLD_MULTIPLIER / MULTIPLIER_PRECISION;
-            if (block.timestamp - updatedAt > staleNessThreshold) {
-                revert AbstractYodlRouter__PricefeedStale();
-            }
+            (, price,,,) = priceFeedTwo.latestRoundData();
             prices[1] = price;
             converted = (converted * decimals) / uint256(price);
         }
