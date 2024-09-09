@@ -12,7 +12,7 @@ contract YodlAbstractRouterTest is Test {
     address constant MOCK_SIGNER = address(0x2);
 
     function setUp() public {
-        abstractRouter = new AbstractYodlRouterHarness();
+        abstractRouter = new AbstractYodlRouterHarness(AbstractYodlRouter.ChainType.L1, address(0));
         vm.etch(abstractRouter.RATE_VERIFIER(), hex"1234"); // Mock the RATE_VERIFIER contract
     }
 

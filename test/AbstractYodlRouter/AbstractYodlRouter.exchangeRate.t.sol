@@ -14,7 +14,7 @@ contract YodlAbstractRouterTest is Test {
     AbstractYodlRouter.PriceFeed priceFeedZeroValues;
 
     function setUp() public {
-        abstractRouter = new AbstractYodlRouterHarness();
+        abstractRouter = new AbstractYodlRouterHarness(AbstractYodlRouter.ChainType.L1, address(0));
         priceFeedChainlink = abstractRouter.getPriceFeedChainlink();
         priceFeedExternal = abstractRouter.getPriceFeedExternal();
     }

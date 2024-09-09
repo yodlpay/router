@@ -18,7 +18,7 @@ contract YodlAbstractRouterTest is Test {
         // mockYodlFeeTreasury = address(0x2);
 
         // helperContract = new AbstractYodlRouterHarness(mockWrappedNativeToken, mockYodlFeeTreasury, YODL_FEE_BPS);
-        abstractRouter = new AbstractYodlRouterHarness();
+        abstractRouter = new AbstractYodlRouterHarness(AbstractYodlRouter.ChainType.L1, address(0));
     }
 
     /* 
