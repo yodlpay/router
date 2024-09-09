@@ -24,6 +24,7 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
 
         priceFeedChainlink = AbstractYodlRouter.PriceFeed({
             feedAddress: address(13480),
+            heartbeat: 86400,
             feedType: 1,
             currency: "USDC",
             amount: 0,
@@ -33,6 +34,7 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
 
         priceFeedExternal = AbstractYodlRouter.PriceFeed({
             feedAddress: address(13481),
+            heartbeat: 86400,
             feedType: 2,
             currency: "USDT",
             amount: 3,

@@ -31,6 +31,7 @@ contract YodlAbstractRouterTest is Test {
         /* Use signature in price feed */
         AbstractYodlRouter.PriceFeed memory priceFeed = AbstractYodlRouter.PriceFeed({
             feedAddress: address(12345),
+            heartbeat: 86400,
             feedType: 2, // EXTERNAL_FEED
             currency: currency,
             amount: amount,

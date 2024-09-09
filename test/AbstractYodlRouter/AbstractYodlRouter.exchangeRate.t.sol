@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
-import "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {AbstractYodlRouter} from "../../src/AbstractYodlRouter.sol";
 import {ISwapRouter02} from "../../src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
@@ -208,5 +208,47 @@ contract YodlAbstractRouterTest is Test {
         assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to expected amount");
         assertEq(prices[0], price, "prices[0] not equal to price");
         assertEq(prices[1], 0, "prices[1] != 0");
+    }
+
+    /* 
+    * Scenario: Chainlink price feed data is stale
+    * Checks both pricefeed[0] and pricefeed[1]
+    */
+    function test_ExchangeRate_Revert_ChainlinkFeedDataStale() public {
+        _test_ExchangeRate_Revert_ChainlinkFeedDataStale(true);
+        _test_ExchangeRate_Revert_ChainlinkFeedDataStale(false);
+    }
+
+    /**
+     * Helper to execute boolean
+     */
+    function _test_ExchangeRate_Revert_ChainlinkFeedDataStale(bool invertPriceFeed) public {
+        uint256 amount = 999;
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [
+            invertPriceFeed ? priceFeedZeroValues : priceFeedChainlink,
+            invertPriceFeed ? priceFeedChainlink : priceFeedZeroValues
+        ];
+
+        /* Prepare mock data */
+        uint256 decimals = 8;
+        int256 price = 1_000_0001;
+        vm.warp(block.timestamp + 100 days);
+        uint256 updateAt = block.timestamp - 99 days; // 99 days since last update
+
+        vm.mockCall(
+            priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
+            abi.encode(decimals)
+        );
+
+        vm.mockCall(
+            priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+            abi.encode(0, price, 0, updateAt, 0)
+        );
+
+        /* Expect revert and execute */
+        vm.expectRevert(AbstractYodlRouter.AbstractYodlRouter__PricefeedStale.selector);
+        abstractRouter.exchangeRate(priceFeeds, amount);
     }
 }
