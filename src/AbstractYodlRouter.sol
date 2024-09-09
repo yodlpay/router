@@ -9,6 +9,8 @@ import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
 abstract contract AbstractYodlRouter {
+    error AbstractYodlRouter__PricefeedStale();
+
     string public version;
     address public yodlFeeTreasury;
     uint256 public yodlFeeBps;
@@ -16,6 +18,8 @@ abstract contract AbstractYodlRouter {
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 public constant MAX_EXTRA_FEE_BPS = 5_000; // 50%
     address public constant RATE_VERIFIER = 0xc71f6e1e4665d319610afA526BE529202cA13bB7;
+    uint256 constant THRESHOLD_MULTIPLIER = 12; // 1.2x multiplier when calculating price feed staleness
+    uint256 constant MULTIPLIER_PRECISION = 10;
 
     int8 public constant NULL_FEED = 0;
     int8 public constant CHAINLINK_FEED = 1;
@@ -70,6 +74,7 @@ abstract contract AbstractYodlRouter {
     /**
      * @notice Struct to hold the price feed information, it's either Chainlink or external
      * @param feedAddress The address of the Chainlink price feed, ZERO otherwise
+     * @param heartbeat Time in seconds between (forced) Chainlink price feed updates, ZERO otherwise
      * @param feedType The type of the price feed, 1 for Chainlink, 2 for external
      * @param currency The currency of the price feed, if external, ZERO otherwise
      * @param amount The amount to be converted by the price feed exchange rates, if external, ZERO otherwise
@@ -78,6 +83,7 @@ abstract contract AbstractYodlRouter {
      */
     struct PriceFeed {
         address feedAddress;
+        uint256 heartbeat;
         int8 feedType;
         string currency;
         uint256 amount;
@@ -153,7 +159,14 @@ abstract contract AbstractYodlRouter {
         } else {
             // Calculate the converted value using price feeds
             decimals = uint256(10 ** uint256(priceFeedOne.decimals()));
-            (, price,,,) = priceFeedOne.latestRoundData();
+            uint256 updatedAt;
+            (, price,, updatedAt,) = priceFeedOne.latestRoundData();
+            // check if price feed data is stale
+            uint256 staleNessThreshold = (shouldInverse ? priceFeeds[1].heartbeat : priceFeeds[0].heartbeat)
+                * THRESHOLD_MULTIPLIER / MULTIPLIER_PRECISION;
+            if (block.timestamp - updatedAt > staleNessThreshold) {
+                revert AbstractYodlRouter__PricefeedStale();
+            }
             prices[0] = price;
         }
         if (shouldInverse) {
@@ -165,7 +178,14 @@ abstract contract AbstractYodlRouter {
         // We will always divide by the second price feed
         if (address(priceFeedTwo) != address(0)) {
             decimals = uint256(10 ** uint256(priceFeedTwo.decimals()));
-            (, price,,,) = priceFeedTwo.latestRoundData();
+            uint256 updatedAt;
+            (, price,, updatedAt,) = priceFeedTwo.latestRoundData();
+            // check if price feed data is stale
+            uint256 staleNessThreshold = (shouldInverse ? priceFeeds[1].heartbeat : priceFeeds[0].heartbeat)
+                * THRESHOLD_MULTIPLIER / MULTIPLIER_PRECISION;
+            if (block.timestamp - updatedAt > staleNessThreshold) {
+                revert AbstractYodlRouter__PricefeedStale();
+            }
             prices[1] = price;
             converted = (converted * decimals) / uint256(price);
         }
