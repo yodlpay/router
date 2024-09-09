@@ -41,9 +41,11 @@ contract DeployHarnessRouter is Script {
         YodlCurveRouterHarness yodlCurveRouter;
 
         if (routerType == RouterType.Uniswap) {
-            yodlUniswapRouter = new YodlUniswapRouterHarness(config.uniswapRouterV3);
+            yodlUniswapRouter =
+                new YodlUniswapRouterHarness(config.chainType, config.chainlinkL2Sequencer, config.uniswapRouterV3);
         } else if (routerType == RouterType.Curve) {
-            yodlCurveRouter = new YodlCurveRouterHarness(config.curveRouterNG);
+            yodlCurveRouter =
+                new YodlCurveRouterHarness(config.chainType, config.chainlinkL2Sequencer, config.curveRouterNG);
         } else {
             revert("Unsupported router type");
         }
