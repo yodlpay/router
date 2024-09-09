@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import {AbstractYodlRouter} from "../../../src/AbstractYodlRouter.sol";
+import {AbstractYodlRouter} from "@src/AbstractYodlRouter.sol";
 import {IWETH9} from "@uniswap/v3-periphery/contracts/interfaces/external/IWETH9.sol";
 
 contract AbstractYodlRouterHarness is AbstractYodlRouter {
@@ -13,7 +13,9 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
     bool private mockVerifyRateSignatureResult;
     address public constant MOCK_RATE_VERIFIER = 0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf; // vm.addr(1)
 
-    constructor() AbstractYodlRouter() {
+    constructor(AbstractYodlRouter.ChainType _chainType, address _sequencerUptimeFeed)
+        AbstractYodlRouter(_chainType, _sequencerUptimeFeed)
+    {
         version = "vSam";
         yodlFeeBps = 20;
 
