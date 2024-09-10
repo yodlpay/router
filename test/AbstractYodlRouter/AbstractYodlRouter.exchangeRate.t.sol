@@ -9,15 +9,17 @@ import {ISwapRouter02} from "@src/routers/YodlUniswapRouter.sol";
 import {AbstractYodlRouterHarness} from "./shared/AbstractYodlRouterHarness.t.sol";
 
 contract YodlAbstractRouterTest is Test {
-    AbstractYodlRouterHarness abstractRouter;
+    AbstractYodlRouterHarness abstractRouterL1;
+    AbstractYodlRouterHarness abstractRouterL2;
     AbstractYodlRouter.PriceFeed priceFeedExternal;
     AbstractYodlRouter.PriceFeed priceFeedChainlink;
     AbstractYodlRouter.PriceFeed priceFeedZeroValues;
 
     function setUp() public {
-        abstractRouter = new AbstractYodlRouterHarness(AbstractYodlRouter.ChainType.L1, address(0));
-        priceFeedChainlink = abstractRouter.getPriceFeedChainlink();
-        priceFeedExternal = abstractRouter.getPriceFeedExternal();
+        abstractRouterL1 = new AbstractYodlRouterHarness(AbstractYodlRouter.ChainType.L1, address(0)); // Change later to use real address from helper config
+        abstractRouterL2 = new AbstractYodlRouterHarness(AbstractYodlRouter.ChainType.L2, address(0));
+        priceFeedChainlink = abstractRouterL1.getPriceFeedChainlink();
+        priceFeedExternal = abstractRouterL1.getPriceFeedExternal();
     }
 
     /* 
@@ -30,7 +32,7 @@ contract YodlAbstractRouterTest is Test {
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedZeroValues, priceFeedZeroValues];
 
         (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices) =
-            abstractRouter.exchangeRate(priceFeeds, amount);
+            abstractRouterL1.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, amount, "converted not equal to amount");
         assertEq(prices[0], int256(1));
@@ -62,7 +64,7 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price, 0, 0, 0)
         );
 
-        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouterL1.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, (amount * 10 ** decimals) / uint256(price), "converted not equal to expected amount");
         assertEq(prices[0], price, "prices[0] not equal to price");
@@ -92,7 +94,7 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price, 0, 0, 0)
         );
 
-        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouterL1.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to expected amount");
         assertEq(prices[0], price, "prices[0] not equal to price");
@@ -136,7 +138,7 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price2, 0, 0, 0)
         );
 
-        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouterL1.exchangeRate(priceFeeds, amount);
 
         uint256 expectedConverted = amount * uint256(price1) / (10 ** decimals1);
         expectedConverted = expectedConverted * (10 ** decimals2) / uint256(price2);
@@ -154,7 +156,7 @@ contract YodlAbstractRouterTest is Test {
         vm.assume(amount < 1e68); // prevent arithmetic overflow
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedZeroValues];
 
-        abstractRouter.setMockVerifyRateSignature(true, true);
+        abstractRouterL1.setMockVerifyRateSignature(true, true);
 
         // This did not work. Revert workaround and figure out how to mock or how to use priv key to pass verifyRateSignature
         // Mock the verifyRateSignature to return true
@@ -164,7 +166,7 @@ contract YodlAbstractRouterTest is Test {
         //     abi.encode(true)
         // );
 
-        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouterL1.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, amount * uint256(priceFeeds[0].amount) / 10 ** 18, "converted not equal to expected amount");
         assertEq(prices[0], int256(priceFeeds[0].amount), "prices[0] not equal to price");
@@ -179,7 +181,7 @@ contract YodlAbstractRouterTest is Test {
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [priceFeedExternal, priceFeedZeroValues]; // priceFeedExternal.signature: ""
 
         vm.expectRevert("Invalid signature for external price feed");
-        abstractRouter.exchangeRate(priceFeeds, amount);
+        abstractRouterL1.exchangeRate(priceFeeds, amount);
     }
 
     /* 
@@ -204,7 +206,7 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price, 0, 0, 0)
         );
 
-        (uint256 converted,, int256[2] memory prices) = abstractRouter.exchangeRate(priceFeeds, amount);
+        (uint256 converted,, int256[2] memory prices) = abstractRouterL1.exchangeRate(priceFeeds, amount);
 
         assertEq(converted, amount * uint256(price) / 10 ** decimals, "converted not equal to expected amount");
         assertEq(prices[0], price, "prices[0] not equal to price");
@@ -221,18 +223,17 @@ contract YodlAbstractRouterTest is Test {
     }
 
     /**
-     * Helper to execute boolean
+     * Helper to fuzz boolean
      */
     function _test_ExchangeRate_Revert_ChainlinkFeedDataStale(bool invertPriceFeed) public {
-        uint256 amount = 999;
+        /* Prepare mock data */
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [
             invertPriceFeed ? priceFeedZeroValues : priceFeedChainlink,
             invertPriceFeed ? priceFeedChainlink : priceFeedZeroValues
         ];
-
-        /* Prepare mock data */
-        uint256 decimals = 8;
-        int256 price = 1_000_0001;
+        uint256 amount = 0;
+        uint256 decimals = 0;
+        int256 price = 0;
         vm.warp(block.timestamp + 100 days);
         uint256 updateAt = block.timestamp - 99 days; // 99 days since last update
 
@@ -250,24 +251,34 @@ contract YodlAbstractRouterTest is Test {
 
         /* Expect revert and execute */
         vm.expectRevert(AbstractYodlRouter.AbstractYodlRouter__PricefeedStale.selector);
-        abstractRouter.exchangeRate(priceFeeds, amount);
+        abstractRouterL1.exchangeRate(priceFeeds, amount);
+    }
+
+    /* 
+    * Scenario: Chainlink L2 Sequencer is down
+    * Checks both pricefeed[0] and pricefeed[1]
+    */
+    function test_ExchangeRate_Revert_L2SequencerDown() public {
+        _test_ExchangeRate_Revert_L2SequencerDown(true);
+        _test_ExchangeRate_Revert_L2SequencerDown(false);
     }
 
     /**
-     * Helper to execute boolean
+     * Helper to fuzz boolean
      */
-    function test_ExchangeRate_Revert_L2SequencerDown(bool invertPriceFeed) public {
-        uint256 amount = 999;
+    function _test_ExchangeRate_Revert_L2SequencerDown(bool invertPriceFeed) public {
+        /* Prepare mock data */
         AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [
             invertPriceFeed ? priceFeedZeroValues : priceFeedChainlink,
             invertPriceFeed ? priceFeedChainlink : priceFeedZeroValues
         ];
-
-        /* Prepare mock data */
-        uint256 decimals = 8;
-        int256 price = 1_000_0001;
-        vm.warp(block.timestamp + 100 days);
-        uint256 updateAt = block.timestamp - 99 days; // 99 days since last update
+        uint256 amount = 0;
+        uint256 decimals = 0;
+        int256 price = 0;
+        vm.warp(block.timestamp + 100 days); // avoid arithmetic underflow
+        uint256 updateAt = 0;
+        int256 sequencerStatus = 1; // 0 == up, 1 == down
+        uint256 startedAt = 0;
 
         vm.mockCall(
             priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
@@ -281,8 +292,65 @@ contract YodlAbstractRouterTest is Test {
             abi.encode(0, price, 0, updateAt, 0)
         );
 
+        // Mock the second call (sequencerUptimeFeed)
+        vm.mockCall(
+            address(0), // Use sequencerUptimeFeed when set up to be chain agnostic
+            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+            abi.encode(0, sequencerStatus, startedAt, 0, 0)
+        );
+
         /* Expect revert and execute */
-        vm.expectRevert(AbstractYodlRouter.AbstractYodlRouter__PricefeedStale.selector);
-        abstractRouter.exchangeRate(priceFeeds, amount);
+        vm.expectRevert(AbstractYodlRouter.AbstractYodlRouter__SequencerDown.selector);
+        abstractRouterL2.exchangeRate(priceFeeds, amount);
+    }
+
+    /* 
+    * Scenario: Chainlink L2 Sequencer has not been up longer than GRACE_PERIOD_SECONDS
+    * Checks both pricefeed[0] and pricefeed[1]
+    */
+    function test_ExchangeRate_Revert_GracePeriodNotOver() public {
+        _test_ExchangeRate_Revert_GracePeriodNotOver(true);
+        _test_ExchangeRate_Revert_GracePeriodNotOver(false);
+    }
+
+    /**
+     * Helper to fuzz boolean
+     */
+    function _test_ExchangeRate_Revert_GracePeriodNotOver(bool invertPriceFeed) public {
+        /* Prepare mock data */
+        AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [
+            invertPriceFeed ? priceFeedZeroValues : priceFeedChainlink,
+            invertPriceFeed ? priceFeedChainlink : priceFeedZeroValues
+        ];
+        uint256 amount = 0;
+        uint256 decimals = 0;
+        int256 price = 0;
+        vm.warp(block.timestamp + 100 days); // avoid arithmetic underflow
+        uint256 updateAt = 0;
+        int256 sequencerStatus = 0; // 0 == up, 1 == down
+        uint256 startedAt = block.timestamp - 5 minutes; // 5 mins < GRACE_PERIOD_SECONDS
+
+        vm.mockCall(
+            priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
+            abi.encode(decimals)
+        );
+
+        vm.mockCall(
+            priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
+            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+            abi.encode(0, price, 0, updateAt, 0)
+        );
+
+        // Mock the second call (sequencerUptimeFeed)
+        vm.mockCall(
+            address(0), // Use sequencerUptimeFeed when set up to be chain agnostic
+            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+            abi.encode(0, sequencerStatus, startedAt, 0, 0)
+        );
+
+        /* Expect revert and execute */
+        vm.expectRevert(AbstractYodlRouter.AbstractYodlRouter__GracePeriodNotOver.selector);
+        abstractRouterL2.exchangeRate(priceFeeds, amount);
     }
 }

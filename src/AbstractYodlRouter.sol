@@ -182,7 +182,6 @@ abstract contract AbstractYodlRouter {
             (, price,, updatedAt,) = priceFeedOne.latestRoundData();
 
             // L2s only: check if the sequencer is up
-            // if (sequencerUptimeFeed != address(0)) {
             if (chainType == ChainType.L2) {
                 (, int256 answer, uint256 startedAt,,) = AggregatorV3Interface(sequencerUptimeFeed).latestRoundData(); // answer: 0 == up, 1 == down
 
@@ -197,7 +196,6 @@ abstract contract AbstractYodlRouter {
                     revert AbstractYodlRouter__GracePeriodNotOver();
                 }
             }
-
             // check if price feed data is stale
             uint256 staleNessThreshold = (shouldInverse ? priceFeeds[1].heartbeat : priceFeeds[0].heartbeat)
                 * THRESHOLD_MULTIPLIER / MULTIPLIER_PRECISION;
