@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
 import {Script, console2} from "forge-std/Script.sol";
@@ -18,9 +18,11 @@ contract HelperConfig is CodeConstants, Script {
 
     struct NetworkConfig {
         address uniswapRouterV3;
+        address curveRouterNG;
         address link;
         address usdc;
         address dai;
+        address usdt;
         address account;
     }
 
@@ -55,9 +57,11 @@ contract HelperConfig is CodeConstants, Script {
     function getMainnetEthConfig() public pure returns (NetworkConfig memory mainnetNetworkConfig) {
         mainnetNetworkConfig = NetworkConfig({
             uniswapRouterV3: 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45, // SwapRouter02
+            curveRouterNG: 0x16C6521Dff6baB339122a0FE25a9116693265353, // v1.1
             link: 0x514910771AF9Ca656af840dff83E8264EcF986CA,
             usdc: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
             dai: 0x6B175474E89094C44Da98b954EedeAC495271d0F,
+            usdt: 0xdAC17F958D2ee523a2206206994597C13D831ec7,
             // account: DEFAULT_ANVIL_USER
             account: RICH_USER
         });
@@ -66,9 +70,11 @@ contract HelperConfig is CodeConstants, Script {
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory sepoliaNetworkConfig) {
         sepoliaNetworkConfig = NetworkConfig({
             uniswapRouterV3: 0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E, // SwapRouter02
+            curveRouterNG: address(0), // Not deployed
             link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
             usdc: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
             dai: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
+            usdt: address(0), // Not found
             account: RICH_USER // Not sure if rich on Sepolia
         });
     }
@@ -84,18 +90,22 @@ contract HelperConfig is CodeConstants, Script {
         vm.startBroadcast();
         // Deploy uniswap router v3 mock (if possible)
         address uniswapRouterV3Mock = vm.addr(0x1); // shold deply contract
+        address curveRouterNGMock = vm.addr(0x1); // shold deply contract
         //  VRFCoordinatorV2_5Mock uniswapRouterV3Mock =
         //     new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UINT_LINK);
         MyMockERC20 link = new MyMockERC20("Chainlink Token", "LINK", 18);
         MyMockERC20 usdc = new MyMockERC20("USD Coin", "USDC", 6);
         MyMockERC20 dai = new MyMockERC20("Dai Stablecoin", "DAI", 18);
+        MyMockERC20 usdt = new MyMockERC20("Tether USD", "USDT", 6);
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({
             uniswapRouterV3: address(uniswapRouterV3Mock),
+            curveRouterNG: address(curveRouterNGMock),
             link: address(link),
             usdc: address(usdc),
             dai: address(dai),
+            usdt: address(usdt),
             account: DEFAULT_ANVIL_USER
         });
         vm.deal(localNetworkConfig.account, 100 ether); // redundant?

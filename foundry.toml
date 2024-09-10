@@ -6,6 +6,10 @@ solc-version = "0.8.26"
 optimizer = true
 optimizer-runs = 200
 
+# Required/quick fix for curve fork test: https://github.com/foundry-rs/foundry/issues/4988
+evm_version = "shanghai" 
+
 [fuzz]
 show_logs = true
+evm_version = "shanghai"
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

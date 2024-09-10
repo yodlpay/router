@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AbstractYodlRouter} from "@src/AbstractYodlRouter.sol";
 import {YodlUniswapRouter} from "@src/routers/YodlUniswapRouter.sol";
 import {HelperConfig} from "@script/HelperConfig.s.sol";
-import {DeployYodlUniswapRouter} from "@script/DeployYodlUniswapRouter.s.sol";
+import {DeployHarnessRouter} from "@script/DeployHarnessRouter.s.sol";
 import {YodlUniswapRouterHarness} from "./shared/YodlUniswapRouterHarness.t.sol";
 
 contract YodlUniswapRouterForkTest is Test {
@@ -30,8 +30,8 @@ contract YodlUniswapRouterForkTest is Test {
     uint256 constant baseFeeBps = 20;
 
     function setUp() external {
-        DeployYodlUniswapRouter deployer = new DeployYodlUniswapRouter();
-        (harnessRouter, helperConfig) = deployer.run();
+        DeployHarnessRouter deployer = new DeployHarnessRouter();
+        (harnessRouter,, helperConfig) = deployer.run(DeployHarnessRouter.RouterType.Uniswap);
 
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
         uniswapRouter = config.uniswapRouterV3;
@@ -77,26 +77,25 @@ contract YodlUniswapRouterForkTest is Test {
 
     /* Test functions */
 
-    function test_Transfer_Fork() public {
+    function test_UniswapTransfer_Fork() public {
         YodlUniswapRouter.YodlUniswapParams memory params = createYodlUniswapParams(true);
-        uint256 fee = params.amountOut * baseFeeBps / 10000;
-        uint256 senderBalanceBefore = daiToken.balanceOf(SENDER);
-        uint256 contractBalanceBefore = usdcToken.balanceOf(address(harnessRouter));
+        uint256 feeUSDC = params.amountOut * baseFeeBps / 10000;
+        uint256 senderDAI = daiToken.balanceOf(SENDER);
+        uint256 contractUSDC = usdcToken.balanceOf(address(harnessRouter));
 
         vm.startPrank(SENDER, SENDER); // sets msg.sender and tx.origin to SENDER for all subsequent calls
         daiToken.approve(address(harnessRouter), type(uint256).max);
         uint256 amountSpent = harnessRouter.yodlWithUniswap(params); // Call router
         vm.stopPrank();
 
-        uint256 senderBalanceAfter = daiToken.balanceOf(SENDER);
-        uint256 receiverBalanceAfter = usdcToken.balanceOf(RECEIVER);
-        uint256 contractBalanceAfter = usdcToken.balanceOf(address(harnessRouter));
-        uint256 contractBalanceAfterDAI = daiToken.balanceOf(address(harnessRouter));
+        uint256 senderAfter = daiToken.balanceOf(SENDER);
+        uint256 receiverAfter = usdcToken.balanceOf(RECEIVER);
+        uint256 contractAfter = usdcToken.balanceOf(address(harnessRouter));
+        uint256 contractAfterDAI = daiToken.balanceOf(address(harnessRouter));
 
-        /* Pass */
-        assertEq(params.amountIn, amountSpent + contractBalanceAfterDAI, "Incorrect amount spent");
-        assertEq(senderBalanceAfter, senderBalanceBefore - params.amountIn, "Incorrect sender balance");
-        assertEq(contractBalanceAfter, contractBalanceBefore + fee, "Incorrect contract balance");
-        assertEq(receiverBalanceAfter, params.amountOut - fee, "Incorrect receiver balance");
+        assertEq(params.amountIn, amountSpent + contractAfterDAI, "Incorrect amount spent");
+        assertEq(senderAfter, senderDAI - params.amountIn, "Incorrect sender balance");
+        assertEq(contractAfter, contractUSDC + feeUSDC, "Incorrect contract balance");
+        assertEq(receiverAfter, params.amountOut - feeUSDC, "Incorrect receiver balance");
     }
 }

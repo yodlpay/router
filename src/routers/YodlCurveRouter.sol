@@ -3,15 +3,15 @@
 // @author samthebuilder.eth
 pragma solidity ^0.8.26;
 
-import "../interfaces/ICurveRouter.sol";
+import "../interfaces/ICurveRouterNG.sol";
 import "../AbstractYodlRouter.sol";
 import "../interfaces/IBeforeHook.sol";
 
 abstract contract YodlCurveRouter is AbstractYodlRouter {
-    ICurveRouter private curveRouter;
+    ICurveRouterNG public curveRouter;
 
     /// @notice Parameters for a payment through Curve
-    /// @dev The`route`, `swapParams` and `factoryAddresses` should be determined client-side by the CurveJS client.
+    /// @dev The`route`, `swapParams` and `pools` should be determined client-side by the CurveJS client.
     struct YodlCurveParams {
         address sender;
         address receiver;
@@ -20,9 +20,9 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         // If we are using price feeds, this is in terms of the invoice amount, but it must have the same decimals as tokenOut
         uint256 amountOut;
         bytes32 memo;
-        address[9] route;
-        uint256[3][4] swapParams; // [i, j, swap_type] where i and j are the coin index for the n'th pool in route
-        address[4] factoryAddresses;
+        address[11] route;
+        uint256[5][5] swapParams;
+        address[5] pools;
         PriceFeed[2] priceFeeds;
         address extraFeeReceiver;
         uint256 extraFeeBps;
@@ -32,7 +32,7 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
     }
 
     constructor(address _curveRouter) {
-        curveRouter = ICurveRouter(_curveRouter);
+        curveRouter = ICurveRouterNG(_curveRouter);
     }
 
     /// @notice Handles a payment with a swap through Curve
@@ -86,12 +86,12 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         TransferHelper.safeApprove(tokenIn, address(curveRouter), params.amountIn);
 
         // Make the swap - the YodlRouter will receive the tokens
-        uint256 amountOut = curveRouter.exchange_multiple(
+        uint256 amountOut = curveRouter.exchange(
             params.route,
             params.swapParams,
             params.amountIn,
             outAmountGross, // this will revert if we do not get at least this amount
-            params.factoryAddresses, // this is for zap contracts
+            params.pools, // this is for zap contracts
             address(this) // the Yodl router will receive the tokens
         );
         require(amountOut >= outAmountGross, "amountOut is less then outAmountGross");
@@ -133,11 +133,11 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
     /// @param route Route for a Curve swap in the form of [token, pool address, token...] with zero addresses once the
     /// swap has completed
     /// @return The tokenOut and tokenIn
-    function decodeTokenOutTokenInCurve(address[9] memory route) internal pure returns (address, address) {
+    function decodeTokenOutTokenInCurve(address[11] memory route) internal pure returns (address, address) {
         address tokenIn = route[0];
         address tokenOut = route[2];
         // Output tokens can be located at indices 2, 4, 6 or 8, if the loop finds nothing, then it is index 2
-        for (uint256 i = 4; i >= 2; i--) {
+        for (uint256 i = 5; i >= 2; i--) {
             if (route[i * 2] != address(0)) {
                 tokenOut = route[i * 2];
                 break;
