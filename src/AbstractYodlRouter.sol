@@ -9,11 +9,6 @@ import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
 abstract contract AbstractYodlRouter {
-    enum ChainType {
-        L1,
-        L2
-    }
-
     string public version;
     address public yodlFeeTreasury;
     uint256 public yodlFeeBps;
@@ -62,7 +57,6 @@ abstract contract AbstractYodlRouter {
         string indexed currency0, address indexed priceFeed1, int256 exchangeRate0, int256 exchangeRate1
     );
 
-    error AbstractYodlRouter__PricefeedStale();
     error AbstractYodlRouter__SequencerDown();
     error AbstractYodlRouter__GracePeriodNotOver();
 
@@ -126,7 +120,7 @@ abstract contract AbstractYodlRouter {
         view
         returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
     {
-        // Perform L2 sequencer check if neccessary, reverts if sequencer is down
+        // Performs L2 sequencer check if neccessary, reverts if sequencer is down
         if (isSequencerUptimeCheckNeeded(priceFeeds)) {
             checkSequencerUptime();
         }
@@ -299,9 +293,11 @@ abstract contract AbstractYodlRouter {
 
     /**
      * @notice Checks if the L2 sequencer uptime check is required.
+     * @dev The check is required if the contract is on an L2 chain and at least one of the price feeds is a Chainlink feed.
+     * @param _priceFeeds The price feeds used in the transaction.
      */
     function isSequencerUptimeCheckNeeded(PriceFeed[2] memory _priceFeeds) private view returns (bool) {
         return sequencerUptimeFeed != address(0)
-            && (_priceFeeds[0].feedType != NULL_FEED || _priceFeeds[1].feedType != NULL_FEED);
+            && (_priceFeeds[0].feedType == CHAINLINK_FEED || _priceFeeds[1].feedType == CHAINLINK_FEED);
     }
 }
