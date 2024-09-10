@@ -12,7 +12,7 @@ contract YodlAbstractRouterTest is Test {
     AbstractYodlRouterHarness abstractRouter;
 
     function setUp() public {
-        abstractRouter = new AbstractYodlRouterHarness(AbstractYodlRouter.ChainType.L1, address(0));
+        abstractRouter = new AbstractYodlRouterHarness(address(0));
     }
 
     /* 

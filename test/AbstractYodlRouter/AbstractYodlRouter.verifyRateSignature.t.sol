@@ -12,7 +12,7 @@ contract YodlAbstractRouterTest is Test {
     address constant MOCK_SIGNER = address(0x2);
 
     function setUp() public {
-        abstractRouter = new AbstractYodlRouterHarness(AbstractYodlRouter.ChainType.L1, address(0));
+        abstractRouter = new AbstractYodlRouterHarness(address(0));
         vm.etch(abstractRouter.RATE_VERIFIER(), hex"1234"); // Mock the RATE_VERIFIER contract
     }
 
@@ -31,7 +31,6 @@ contract YodlAbstractRouterTest is Test {
         /* Use signature in price feed */
         AbstractYodlRouter.PriceFeed memory priceFeed = AbstractYodlRouter.PriceFeed({
             feedAddress: address(12345),
-            heartbeat: 86400,
             feedType: 2, // EXTERNAL_FEED
             currency: currency,
             amount: amount,

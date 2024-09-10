@@ -13,11 +13,10 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
     bool private mockVerifyRateSignatureResult;
     address public constant MOCK_RATE_VERIFIER = 0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf; // vm.addr(1)
 
-    constructor(AbstractYodlRouter.ChainType _chainType, address _sequencerUptimeFeed)
-        AbstractYodlRouter(_chainType, _sequencerUptimeFeed)
-    {
+    constructor(address _sequencerUptimeFeed) AbstractYodlRouter() {
         version = "vSam";
         yodlFeeBps = 20;
+        sequencerUptimeFeed = _sequencerUptimeFeed;
 
         /* Values from Arbitrum miannet?*/
         yodlFeeTreasury = 0x5f0947253a8218894af13438ac2e2E0CeD30d234;
@@ -26,7 +25,6 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
 
         priceFeedChainlink = AbstractYodlRouter.PriceFeed({
             feedAddress: address(13480),
-            heartbeat: 86400,
             feedType: 1,
             currency: "USDC",
             amount: 0,
@@ -36,7 +34,6 @@ contract AbstractYodlRouterHarness is AbstractYodlRouter {
 
         priceFeedExternal = AbstractYodlRouter.PriceFeed({
             feedAddress: address(13481),
-            heartbeat: 86400,
             feedType: 2,
             currency: "USDT",
             amount: 3,
