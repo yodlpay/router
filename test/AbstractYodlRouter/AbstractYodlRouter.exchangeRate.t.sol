@@ -213,47 +213,6 @@ contract YodlAbstractRouterTest is Test {
         assertEq(prices[1], 0, "prices[1] != 0");
     }
 
-    // /*
-    // * Scenario: Chainlink price feed data is stale
-    // * Checks both pricefeed[0] and pricefeed[1]
-    // */
-    // function test_ExchangeRate_Revert_ChainlinkFeedDataStale() public {
-    //     _test_ExchangeRate_Revert_ChainlinkFeedDataStale(true);
-    //     _test_ExchangeRate_Revert_ChainlinkFeedDataStale(false);
-    // }
-
-    // /**
-    //  * Helper to fuzz boolean
-    //  */
-    // function _test_ExchangeRate_Revert_ChainlinkFeedDataStale(bool invertPriceFeed) public {
-    //     /* Prepare mock data */
-    //     AbstractYodlRouter.PriceFeed[2] memory priceFeeds = [
-    //         invertPriceFeed ? priceFeedZeroValues : priceFeedChainlink,
-    //         invertPriceFeed ? priceFeedChainlink : priceFeedZeroValues
-    //     ];
-    //     uint256 amount = 0;
-    //     uint256 decimals = 0;
-    //     int256 price = 0;
-    //     vm.warp(block.timestamp + 100 days);
-    //     uint256 updateAt = block.timestamp - 99 days; // 99 days since last update
-
-    //     vm.mockCall(
-    //         priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
-    //         abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
-    //         abi.encode(decimals)
-    //     );
-
-    //     vm.mockCall(
-    //         priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
-    //         abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-    //         abi.encode(0, price, 0, updateAt, 0)
-    //     );
-
-    //     /* Expect revert and execute */
-    //     vm.expectRevert(AbstractYodlRouter.AbstractYodlRouter__PricefeedStale.selector);
-    //     abstractRouterL1.exchangeRate(priceFeeds, amount);
-    // }
-
     /* 
     * Scenario: Chainlink L2 Sequencer is down
     * Checks both pricefeed[0] and pricefeed[1]
@@ -306,12 +265,8 @@ contract YodlAbstractRouterTest is Test {
             invertPriceFeed ? priceFeedZeroValues : priceFeedChainlink,
             invertPriceFeed ? priceFeedChainlink : priceFeedZeroValues
         ];
-        
-        // uint256 amount = 0;
-        // uint256 decimals = 0;
-        // int256 price = 0;
+
         vm.warp(block.timestamp + 100 days); // avoid arithmetic underflow
-        // uint256 updateAt = 0;
         int256 sequencerStatus = 0; // 0 == up, 1 == down
         uint256 startedAt = block.timestamp - 5 minutes; // 5 mins < GRACE_PERIOD_SECONDS
 
@@ -321,19 +276,6 @@ contract YodlAbstractRouterTest is Test {
             abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
             abi.encode(0, sequencerStatus, startedAt, 0, 0)
         );
-
-        // vm.mockCall(
-        //     priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
-        //     abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
-        //     abi.encode(decimals)
-        // );
-
-        // vm.mockCall(
-        //     priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
-        //     abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-        //     abi.encode(0, price, 0, updateAt, 0)
-        // );
-
 
         /* Expect revert and execute */
         vm.expectRevert(AbstractYodlRouter.AbstractYodlRouter__GracePeriodNotOver.selector);
