@@ -104,6 +104,7 @@ abstract contract AbstractYodlRouter {
     /**
      * @notice Constructor for the YodlRouter
      * @param _sequencerUptimeFeed  The address of the Chainlink L2 sequencer uptime feed, address(0) if not on L2
+     * @param _chainType The type of chain, L1 or L2
      */
     constructor(ChainType _chainType, address _sequencerUptimeFeed) {
         chainType = _chainType;

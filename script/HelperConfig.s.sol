@@ -77,7 +77,7 @@ contract HelperConfig is CodeConstants, Script {
             uniswapRouterV3: 0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E, // SwapRouter02
             curveRouterNG: address(0), // Not deployed
             chainlinkL2Sequencer: address(0),
-            chainType: AbstractYodlRouter.ChainType.L2,
+            chainType: AbstractYodlRouter.ChainType.L1,
             link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
             usdc: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
             dai: 0x7fc77B5c7614E1533320EA6dDC2FF6B5b2f7F2B2,
