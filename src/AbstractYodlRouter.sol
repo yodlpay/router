@@ -8,6 +8,8 @@ import "../lib/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
+import {Test, console} from "forge-std/Test.sol";
+
 abstract contract AbstractYodlRouter {
     string public version;
     address public yodlFeeTreasury;
@@ -120,10 +122,14 @@ abstract contract AbstractYodlRouter {
         view
         returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
     {
+        console.log(unicode"🚀  exchangeRate called");
+        console.log(unicode"🚀  sequencerUptimeFeed", sequencerUptimeFeed);
         // Performs L2 sequencer check if neccessary, reverts if sequencer is down
         if (isSequencerUptimeCheckNeeded(priceFeeds)) {
             checkSequencerUptime();
         }
+
+        console.log(unicode"🚀  exchangeRate sequencer check passed");
 
         bool shouldInverse;
         AggregatorV3Interface priceFeedOne;
@@ -277,7 +283,9 @@ abstract contract AbstractYodlRouter {
      * @dev The grace period is the minimum amount of time the sequencer must be up before transactions are allowed again.
      */
     function checkSequencerUptime() private view {
+        console.log(unicode"🚀  in checkSequencerUptime");
         (, int256 answer, uint256 startedAt,,) = AggregatorV3Interface(sequencerUptimeFeed).latestRoundData(); // answer: 0 == up, 1 == down
+        console.log(unicode"🚀  startedAt:", startedAt);
 
         bool isSequencerUp = answer == 0;
         if (!isSequencerUp) {

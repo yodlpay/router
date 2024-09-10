@@ -274,25 +274,11 @@ contract YodlAbstractRouterTest is Test {
         ];
 
         vm.warp(block.timestamp + 100 days); // avoid arithmetic underflow
-        uint256 updateAt = 0;
         int256 sequencerStatus = 1; // 0 == up, 1 == down
         uint256 startedAt = 0;
 
         vm.mockCall(
-            priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
-            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
-            abi.encode(0)
-        );
-
-        vm.mockCall(
-            priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
-            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-            abi.encode(0, 0, 0, updateAt, 0)
-        );
-
-        // Mock the second call (sequencerUptimeFeed)
-        vm.mockCall(
-            address(0), // Use sequencerUptimeFeed when set up to be chain agnostic
+            address(1), // Chnage to sequencerUptimeFeed when it is set up, to be chain agnostic
             abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
             abi.encode(0, sequencerStatus, startedAt, 0, 0)
         );
@@ -320,35 +306,37 @@ contract YodlAbstractRouterTest is Test {
             invertPriceFeed ? priceFeedZeroValues : priceFeedChainlink,
             invertPriceFeed ? priceFeedChainlink : priceFeedZeroValues
         ];
-        uint256 amount = 0;
-        uint256 decimals = 0;
-        int256 price = 0;
+        
+        // uint256 amount = 0;
+        // uint256 decimals = 0;
+        // int256 price = 0;
         vm.warp(block.timestamp + 100 days); // avoid arithmetic underflow
-        uint256 updateAt = 0;
+        // uint256 updateAt = 0;
         int256 sequencerStatus = 0; // 0 == up, 1 == down
         uint256 startedAt = block.timestamp - 5 minutes; // 5 mins < GRACE_PERIOD_SECONDS
 
-        vm.mockCall(
-            priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
-            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
-            abi.encode(decimals)
-        );
-
-        vm.mockCall(
-            priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
-            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-            abi.encode(0, price, 0, updateAt, 0)
-        );
-
         // Mock the second call (sequencerUptimeFeed)
         vm.mockCall(
-            address(0), // Use sequencerUptimeFeed when set up to be chain agnostic
+            address(1), // Use sequencerUptimeFeed when set up to be chain agnostic
             abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
             abi.encode(0, sequencerStatus, startedAt, 0, 0)
         );
 
+        // vm.mockCall(
+        //     priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
+        //     abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
+        //     abi.encode(decimals)
+        // );
+
+        // vm.mockCall(
+        //     priceFeeds[invertPriceFeed ? 1 : 0].feedAddress,
+        //     abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+        //     abi.encode(0, price, 0, updateAt, 0)
+        // );
+
+
         /* Expect revert and execute */
         vm.expectRevert(AbstractYodlRouter.AbstractYodlRouter__GracePeriodNotOver.selector);
-        abstractRouterL2.exchangeRate(priceFeeds, amount);
+        abstractRouterL2.exchangeRate(priceFeeds, 0);
     }
 }
