@@ -120,9 +120,9 @@ abstract contract AbstractYodlRouter {
         view
         returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
     {
-        // Performs L2 sequencer check if neccessary, reverts if sequencer is down
-        if (isSequencerUptimeCheckNeeded(priceFeeds)) {
-            checkSequencerUptime();
+        // Perform L2 sequencer check if neccessary, reverts if sequencer is down
+        if (sequencerUptimeFeed != address(0)) {
+            checkSequencerUptime(priceFeeds);
         }
 
         bool shouldInverse;
@@ -276,7 +276,13 @@ abstract contract AbstractYodlRouter {
      * @dev The sequencer uptime feed is a Chainlink price feed that reports 0 when the sequencer is up and 1 when it is down.
      * @dev The grace period is the minimum amount of time the sequencer must be up before transactions are allowed again.
      */
-    function checkSequencerUptime() private view {
+    function checkSequencerUptime(PriceFeed[2] calldata _priceFeeds) private view {
+        // Return of neither price feed is a Chainlink feed
+        if (_priceFeeds[0].feedType != CHAINLINK_FEED && _priceFeeds[1].feedType != CHAINLINK_FEED) {
+            return;
+        }
+
+        // Check that sequencer is up
         (, int256 answer, uint256 startedAt,,) = AggregatorV3Interface(sequencerUptimeFeed).latestRoundData(); // answer: 0 == up, 1 == down
         bool isSequencerUp = answer == 0;
         if (!isSequencerUp) {
@@ -288,15 +294,5 @@ abstract contract AbstractYodlRouter {
         if (timeSinceUp <= GRACE_PERIOD_SECONDS) {
             revert AbstractYodlRouter__GracePeriodNotOver();
         }
-    }
-
-    /**
-     * @notice Checks if the L2 sequencer uptime check is required.
-     * @dev The check is required if the contract is on an L2 chain and at least one of the price feeds is a Chainlink feed.
-     * @param _priceFeeds The price feeds used in the transaction.
-     */
-    function isSequencerUptimeCheckNeeded(PriceFeed[2] memory _priceFeeds) private view returns (bool) {
-        return sequencerUptimeFeed != address(0)
-            && (_priceFeeds[0].feedType == CHAINLINK_FEED || _priceFeeds[1].feedType == CHAINLINK_FEED);
     }
 }
