@@ -33,7 +33,7 @@ contract YodlUniswapRouterTest is Test {
     address public constant RECEIVER = address(2);
 
     function setUp() public {
-        harnessRouter = new YodlUniswapRouterHarness(uniswapRouterAddress);
+        harnessRouter = new YodlUniswapRouterHarness(uniswapRouterAddress, address(0));
         extraFeeAddress = address(0);
         defaultMemo = "hi";
         tokenA = new MyMockERC20("Token A", "TKA", 18);

@@ -18,5 +18,6 @@ contract YodlRouter is YodlTransferRouter, YodlCurveRouter, YodlUniswapRouter {
         yodlFeeBps = 20;
         yodlFeeTreasury = 0x5f0947253a8218894af13438ac2e2E0CeD30d234;
         wrappedNativeToken = IWETH9(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
+        sequencerUptimeFeed = 0xFdB631F5EE196F0ed6FAa767959853A9F217697D;
     }
 }

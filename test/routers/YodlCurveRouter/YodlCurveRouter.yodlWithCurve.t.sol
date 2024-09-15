@@ -33,7 +33,7 @@ contract YodlCurveRouterTest is Test {
     address public constant RECEIVER = address(2);
 
     function setUp() public {
-        harnessRouter = new YodlCurveRouterHarness(curveRouterAddress);
+        harnessRouter = new YodlCurveRouterHarness(curveRouterAddress, address(0));
         extraFeeAddress = address(0);
 
         defaultMemo = "hi";

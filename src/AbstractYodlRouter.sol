@@ -16,6 +16,8 @@ abstract contract AbstractYodlRouter {
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 public constant MAX_EXTRA_FEE_BPS = 5_000; // 50%
     address public constant RATE_VERIFIER = 0xc71f6e1e4665d319610afA526BE529202cA13bB7;
+    address immutable sequencerUptimeFeed; // Chainlink L2 sequencer uptime feed, address(0) if not on L2
+    uint256 private constant GRACE_PERIOD_SECONDS = 3600; // Allow transactions again after this many seconds of sequencer uptime
 
     int8 public constant NULL_FEED = 0;
     int8 public constant CHAINLINK_FEED = 1;
@@ -54,6 +56,9 @@ abstract contract AbstractYodlRouter {
     event ConvertWithExternalRate(
         string indexed currency0, address indexed priceFeed1, int256 exchangeRate0, int256 exchangeRate1
     );
+
+    error AbstractYodlRouter__SequencerDown();
+    error AbstractYodlRouter__GracePeriodNotOver();
 
     /**
      * @notice Struct to hold the YApp address and the YD ID
@@ -115,8 +120,12 @@ abstract contract AbstractYodlRouter {
         view
         returns (uint256 converted, address[2] memory priceFeedsUsed, int256[2] memory prices)
     {
-        bool shouldInverse;
+        // Perform L2 sequencer check if neccessary, reverts if sequencer is down
+        if (sequencerUptimeFeed != address(0)) {
+            checkSequencerUptime(priceFeeds);
+        }
 
+        bool shouldInverse;
         AggregatorV3Interface priceFeedOne;
         AggregatorV3Interface priceFeedTwo; // might not exist
 
@@ -153,7 +162,11 @@ abstract contract AbstractYodlRouter {
         } else {
             // Calculate the converted value using price feeds
             decimals = uint256(10 ** uint256(priceFeedOne.decimals()));
-            (, price,,,) = priceFeedOne.latestRoundData();
+            uint256 updatedAt;
+            (, price,, updatedAt,) = priceFeedOne.latestRoundData();
+
+            // Insert staleness check here
+
             prices[0] = price;
         }
         if (shouldInverse) {
@@ -165,7 +178,11 @@ abstract contract AbstractYodlRouter {
         // We will always divide by the second price feed
         if (address(priceFeedTwo) != address(0)) {
             decimals = uint256(10 ** uint256(priceFeedTwo.decimals()));
-            (, price,,,) = priceFeedTwo.latestRoundData();
+            uint256 updatedAt;
+            (, price,, updatedAt,) = priceFeedTwo.latestRoundData();
+
+            // Insert staleness check here
+
             prices[1] = price;
             converted = (converted * decimals) / uint256(price);
         }
@@ -251,5 +268,31 @@ abstract contract AbstractYodlRouter {
         }
 
         return ECDSA.recover(ethSignedMessageHash, priceFeed.signature) == RATE_VERIFIER;
+    }
+
+    /**
+     * @notice Checks if the L2 sequencer is up and has been up for at least the grace period.
+     * @dev This function is only called on L2 chains.
+     * @dev The sequencer uptime feed is a Chainlink price feed that reports 0 when the sequencer is up and 1 when it is down.
+     * @dev The grace period is the minimum amount of time the sequencer must be up before transactions are allowed again.
+     */
+    function checkSequencerUptime(PriceFeed[2] calldata _priceFeeds) private view {
+        // Return of neither price feed is a Chainlink feed
+        if (_priceFeeds[0].feedType != CHAINLINK_FEED && _priceFeeds[1].feedType != CHAINLINK_FEED) {
+            return;
+        }
+
+        // Check that sequencer is up
+        (, int256 answer, uint256 startedAt,,) = AggregatorV3Interface(sequencerUptimeFeed).latestRoundData(); // answer: 0 == up, 1 == down
+        bool isSequencerUp = answer == 0;
+        if (!isSequencerUp) {
+            revert AbstractYodlRouter__SequencerDown();
+        }
+
+        // Make sure the grace period has passed after the sequencer is back up.
+        uint256 timeSinceUp = block.timestamp - startedAt;
+        if (timeSinceUp <= GRACE_PERIOD_SECONDS) {
+            revert AbstractYodlRouter__GracePeriodNotOver();
+        }
     }
 }

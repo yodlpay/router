@@ -8,7 +8,10 @@ import {YodlCurveRouter} from "@src/routers/YodlCurveRouter.sol";
 import {AbstractYodlRouterHarness} from "@test/AbstractYodlRouter/shared/AbstractYodlRouterHarness.t.sol";
 
 contract YodlCurveRouterHarness is YodlCurveRouter, AbstractYodlRouterHarness {
-    constructor(address _curveRouter) YodlCurveRouter(_curveRouter) AbstractYodlRouterHarness() {}
+    constructor(address _curveRouter, address _sequencerUptimeFeed)
+        YodlCurveRouter(_curveRouter)
+        AbstractYodlRouterHarness(_sequencerUptimeFeed)
+    {}
 
     /* Override verifyRateSignature to resolve diamond inheritance */
 
