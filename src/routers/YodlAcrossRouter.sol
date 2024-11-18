@@ -93,6 +93,13 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
         // Transfer to receiver
         TransferHelper.safeApprove(params.token, address(acrossSpokePool), outAmountGross);
 
+        // exclusivityDeadline is provided as the number of seconds for a single relayer to fill the deposit, e.g. 10.
+        // It should be passed toi depositV3 as a unix timestamp in seconds.
+        uint32 exclusivityDeadline = params.exclusivityDeadline;
+        if (exclusivityDeadline != 0) {
+            exclusivityDeadline += uint32(block.timestamp);
+        }
+
         acrossSpokePool.depositV3(
             msg.sender, // address depositor,
             params.receiver, // address recipient,
@@ -104,7 +111,7 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
             params.exclusiveRelayer, // address exclusiveRelayer,
             params.quoteTimestamp, // uint32 quoteTimestamp,
             params.fillDeadline, // uint32 fillDeadline,
-            params.exclusivityDeadline, // uint32 exclusivityDeadline,
+            exclusivityDeadline, // uint32 exclusivityDeadline,
             params.message // bytes calldata message
         );
     }
