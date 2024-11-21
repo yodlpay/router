@@ -97,6 +97,8 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
         // It should be passed toi depositV3 as a unix timestamp in seconds.
         uint32 exclusivityDeadline = params.exclusivityDeadline;
         if (exclusivityDeadline != 0) {
+            // Prevent overflow when adding to block.timestamp
+            require(exclusivityDeadline <= type(uint32).max - block.timestamp, "exclusivity deadline overflow");
             exclusivityDeadline += uint32(block.timestamp);
         }
 
