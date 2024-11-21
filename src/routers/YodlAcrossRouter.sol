@@ -43,18 +43,26 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
         acrossSpokePool = V3SpokePoolInterface(_acrossSpokePool);
     }
 
-    function yodlWithAcross(YodlAcrossParams calldata params) external payable returns (uint256) {
+    function yodlWithAcross(
+        YodlAcrossParams calldata params
+    ) external payable returns (uint256) {
         require(params.amount != 0, "invalid amount");
         require(params.token != NATIVE_TOKEN, "only ERC20 supported");
 
         uint256 outAmountGross = params.amount;
 
         // transform amount with priceFeeds
-        if (params.priceFeeds[0].feedType != NULL_FEED || params.priceFeeds[1].feedType != NULL_FEED) {
+        if (
+            params.priceFeeds[0].feedType != NULL_FEED ||
+            params.priceFeeds[1].feedType != NULL_FEED
+        ) {
             {
                 int256[2] memory prices;
                 address[2] memory priceFeedsUsed;
-                (outAmountGross, priceFeedsUsed, prices) = exchangeRate(params.priceFeeds, params.amount);
+                (outAmountGross, priceFeedsUsed, prices) = exchangeRate(
+                    params.priceFeeds,
+                    params.amount
+                );
                 emitConversionEvent(params.priceFeeds, prices);
             }
         }
@@ -62,7 +70,9 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token
             require(
-                IERC20(params.token).allowance(msg.sender, address(this)) >= outAmountGross, "insufficient allowance"
+                IERC20(params.token).allowance(msg.sender, address(this)) >=
+                    outAmountGross,
+                "insufficient allowance"
             );
         }
 
@@ -82,16 +92,36 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
             }
         }
 
+        TransferHelper.safeTransferFrom(
+            params.token,
+            msg.sender,
+            address(this),
+            params.amount
+        );
         depositToAcross(outAmountGross, params);
 
-        emit Yodl(msg.sender, params.receiver, params.token, outAmountGross, totalFee, params.memo);
+        emit Yodl(
+            msg.sender,
+            params.receiver,
+            params.token,
+            outAmountGross,
+            totalFee,
+            params.memo
+        );
 
         return outAmountNet;
     }
 
-    function depositToAcross(uint256 outAmountGross, YodlAcrossParams calldata params) internal {
+    function depositToAcross(
+        uint256 outAmountGross,
+        YodlAcrossParams calldata params
+    ) internal {
         // Transfer to receiver
-        TransferHelper.safeApprove(params.token, address(acrossSpokePool), outAmountGross);
+        TransferHelper.safeApprove(
+            params.token,
+            address(acrossSpokePool),
+            params.amount
+        );
 
         acrossSpokePool.depositV3(
             msg.sender, // address depositor,
