@@ -38,6 +38,7 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
     }
 
     V3SpokePoolInterface public acrossSpokePool;
+    bytes private constant ACROSS_IDENTIFIER = hex"1dc0de004d";
 
     constructor(address _acrossSpokePool) {
         acrossSpokePool = V3SpokePoolInterface(_acrossSpokePool);
@@ -103,7 +104,9 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
             exclusivityDeadline += uint32(block.timestamp);
         }
 
-        acrossSpokePool.depositV3(
+        // Construct the calldata for depositV3
+        bytes memory depositCalldata = abi.encodeWithSelector(
+            V3SpokePoolInterface.depositV3.selector,
             msg.sender, // address depositor,
             params.receiver, // address recipient,
             params.token, // address inputToken,
@@ -117,5 +120,11 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
             exclusivityDeadline, // uint32 exclusivityDeadline,
             params.message // bytes calldata message
         );
+
+        // append yodl-across identifier
+        bytes memory finalCalldata = bytes.concat(depositCalldata, ACROSS_IDENTIFIER);
+
+        (bool success,) = address(acrossSpokePool).call(finalCalldata);
+        require(success, "Across deposit failed");
     }
 }
