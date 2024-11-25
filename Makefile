@@ -41,7 +41,11 @@ coverage-debug :; forge coverage --fork-url ${RPC_URL} --fork-block-number ${BLO
 
 test-all: test test-fork
 
-start-anvil :; nohup anvil --fork-url=${RPC_URL} --fork-block-number ${BLOCK_NUMBER} &
+# start-anvil :; nohup anvil --fork-url=${RPC_URL} --fork-block-number ${BLOCK_NUMBER} &
+start-anvil :; anvil --fork-url=${RPC_URL} --fork-block-number ${BLOCK_NUMBER}
+
+deploy-anvil :; forge create --rpc-url http://localhost:8545 ${CONTRACT} --private-key ${DEFAULT_ANVIL_KEY} | tee deployment.txt
+# e,g.: make deploy-anvil CONTRACT=src/chains/BaseYodlRouter.sol:YodlRouter
 
 stop-testnet :; pkill anvil
 
