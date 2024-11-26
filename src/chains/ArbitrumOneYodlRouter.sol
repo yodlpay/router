@@ -22,4 +22,3 @@ contract YodlRouter is YodlTransferRouter, YodlAcrossRouter, YodlCurveRouter, Yo
         wrappedNativeToken = IWETH9(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
     }
 }
-
