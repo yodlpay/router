@@ -154,7 +154,7 @@ abstract contract AbstractYodlRouter {
             // Calculate the converted value using price feeds
             decimals = uint256(10 ** uint256(priceFeedOne.decimals()));
             (, price,,,) = priceFeedOne.latestRoundData();
-            prices[0] = price;
+            prices[shouldInverse ? 1 : 0] = price;
         }
         if (shouldInverse) {
             converted = (amount * decimals) / uint256(price);
@@ -166,7 +166,7 @@ abstract contract AbstractYodlRouter {
         if (address(priceFeedTwo) != address(0)) {
             decimals = uint256(10 ** uint256(priceFeedTwo.decimals()));
             (, price,,,) = priceFeedTwo.latestRoundData();
-            prices[1] = price;
+            prices[shouldInverse ? 0 : 1] = price;
             converted = (converted * decimals) / uint256(price);
         }
         return (converted, [priceFeeds[0].feedAddress, priceFeeds[1].feedAddress], prices);
