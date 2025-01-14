@@ -60,6 +60,14 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
             outAmountGross = params.amountOut;
         }
 
+        if (params.guards.length > 0) {
+            for (uint256 i = 0; i < params.guards.length; i++) {
+                IBeforeHook(params.guards[i].guardAddress).beforeHook(
+                    msg.sender, params.receiver, outAmountGross, tokenOut, params.guards[i].payload
+                );
+            }
+        }
+
         // There should be no other situation in which we send a transaction with native token
         if (msg.value != 0) {
             // Wrap the native token
@@ -140,14 +148,6 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
         }
 
         TransferHelper.safeApprove(tokenIn, address(uniswapRouter), 0);
-
-        if (params.guards.length > 0) {
-            for (uint256 i = 0; i < params.guards.length; i++) {
-                IBeforeHook(params.guards[i].guardAddress).beforeHook(
-                    msg.sender, params.receiver, outAmountGross, tokenOut, params.guards[i].payload
-                );
-            }
-        }
 
         emit Yodl(params.sender, params.receiver, tokenOut, outAmountGross, totalFee, params.memo);
 
