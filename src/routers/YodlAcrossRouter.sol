@@ -71,10 +71,10 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
         uint256 totalFee = 0;
         uint256 outAmountNet = outAmountGross - totalFee;
 
-        if (params.yAppList.length > 0) {
-            for (uint256 i = 0; i < params.yAppList.length; i++) {
-                IBeforeHook(params.yAppList[i].yApp).beforeHook(
-                    msg.sender, params.receiver, outAmountGross, params.token, params.yAppList[i].payload
+        if (params.guards.length > 0) {
+            for (uint256 i = 0; i < params.guards.length; i++) {
+                IBeforeHook(params.guards[i].guardAddress).beforeHook(
+                    msg.sender, params.receiver, outAmountGross, params.token, params.guards[i].payload
                 );
             }
         }
