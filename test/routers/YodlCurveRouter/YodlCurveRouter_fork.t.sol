@@ -84,7 +84,8 @@ contract YodlCurveRouterForkTest is Test {
             extraFeeReceiver: extraFeeAddress,
             extraFeeBps: 0,
             yd: 0,
-            yAppList: new YodlCurveRouter.YApp[](0)
+            guards: new YodlCurveRouter.Guard[](0),
+            webhooks: new YodlCurveRouter.Webhook[](0)
         });
     }
 
@@ -134,19 +135,20 @@ contract YodlCurveRouterForkTest is Test {
             extraFeeReceiver: extraFeeAddress,
             extraFeeBps: 0,
             yd: 0,
-            yAppList: new YodlCurveRouter.YApp[](0)
+            guards: new YodlCurveRouter.Guard[](0),
+            webhooks: new YodlCurveRouter.Webhook[](0)
         });
     }
 
     /* Test functions */
 
-    /* 
-    * Basic success
-    * ERC20 --> ERC20 (USDT --> USDC) swap
-    */
+    /*
+     * Basic success
+     * ERC20 --> ERC20 (USDT --> USDC) swap
+     */
     function test_CurveTransferERC20_Fork() public {
         YodlCurveRouter.YodlCurveParams memory params = createYodlCurveParams();
-        uint256 feeUSDC = params.amountOut * baseFeeBps / 10000;
+        uint256 feeUSDC = (params.amountOut * baseFeeBps) / 10000;
         uint256 senderUSDT = usdtToken.balanceOf(SENDER);
         uint256 receiverUSDC = usdcToken.balanceOf(RECEIVER);
         uint256 contractUSDC = usdcToken.balanceOf(address(harnessRouter));
@@ -166,11 +168,11 @@ contract YodlCurveRouterForkTest is Test {
         assertEq(contractUSDCAfter, contractUSDC + feeUSDC + convenienceFee, "Incorrect contract balance");
     }
 
-    /* 
-    * Basic success
-    * Native token --> ERC20 (USDT) swap
-    * NB: Getting EVM revert error. Tried multiple combinations of amounts. Copied params from real swap on curve.fi
-    */
+    /*
+     * Basic success
+     * Native token --> ERC20 (USDT) swap
+     * NB: Getting EVM revert error. Tried multiple combinations of amounts. Copied params from real swap on curve.fi
+     */
     // function test_CurveTransferNative_Fork() public {
     //     YodlCurveRouter.YodlCurveParams memory params = createYodlCurveParamsNative();
     //     uint256 feeUSDT = params.amountOut * baseFeeBps / 10000;
@@ -198,10 +200,10 @@ contract YodlCurveRouterForkTest is Test {
     //     assertEq(contractUSDTAfter, contractUSDT + feeUSDT + convenienceFee, "Incorrect contract balance");
     // }
 
-    /* 
-    * Convenience fee in ERC20 token should be transfered to yodl yodlFeeTreasury
-    * USDT --> USDC swap
-    */
+    /*
+     * Convenience fee in ERC20 token should be transfered to yodl yodlFeeTreasury
+     * USDT --> USDC swap
+     */
     function test_Curve_SweepERC20_Fork() public {
         YodlCurveRouter.YodlCurveParams memory params = createYodlCurveParams();
         address yodlFeeTreasury = harnessRouter.yodlFeeTreasury();
@@ -224,11 +226,11 @@ contract YodlCurveRouterForkTest is Test {
         assertEq(treasuryUSDCAfter, treasuryUSDC + routerUSDC, "Incorrect Treasury Balance");
     }
 
-    /* 
-    * Convenience fee in native token should be transfered to yodl yodlFeeTreasury
-    * Native --> USDC swap
-    * NB: Coppied from above, not modified.
-    */
+    /*
+     * Convenience fee in native token should be transfered to yodl yodlFeeTreasury
+     * Native --> USDC swap
+     * NB: Coppied from above, not modified.
+     */
     // function test_Curve_SweepNative_Fork() public {
     //     YodlCurveRouter.YodlCurveParams memory params = createYodlCurveParams();
     //     address yodlFeeTreasury = harnessRouter.yodlFeeTreasury();

@@ -89,7 +89,8 @@ contract YodlCurveRouterTest is Test {
             extraFeeReceiver: extraFeeAddress,
             extraFeeBps: 0,
             yd: 0,
-            yAppList: new YodlCurveRouter.YApp[](0)
+            guards: new YodlCurveRouter.Guard[](0),
+            webhooks: new YodlCurveRouter.Webhook[](0)
         });
     }
 

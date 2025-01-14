@@ -28,7 +28,9 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
         uint256 extraFeeBps;
         uint256 yd;
         // List of YApps that are allowed to be called with IBeforeHook.beforeHook extension
-        YApp[] yAppList;
+        Guard[] guards;
+        // Array of webhook addresses and their associated calldata
+        Webhook[] webhooks;
     }
 
     constructor(address _curveRouter) {
@@ -56,15 +58,10 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
             // no conversion. tokenOut.currency matches invoiceCurrency.
             outAmountGross = params.amountOut;
         }
-        if (params.yAppList.length > 0) {
-            for (uint256 i = 0; i < params.yAppList.length; i++) {
-                IBeforeHook(params.yAppList[i].yApp).beforeHook(
-                    msg.sender,
-                    params.receiver,
-                    outAmountGross,
-                    tokenOut,
-                    params.yAppList[i].sessionId,
-                    params.yAppList[i].payload
+        if (params.guards.length > 0) {
+            for (uint256 i = 0; i < params.guards.length; i++) {
+                IBeforeHook(params.guards[i].guardAddress).beforeHook(
+                    msg.sender, params.receiver, outAmountGross, tokenOut, params.guards[i].payload
                 );
             }
         }
@@ -98,7 +95,7 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
 
         // Handle fees for the transaction - in terms out the token out
         uint256 totalFee = 0;
-        if (params.memo != "" || params.yAppList.length > 0) {
+        if (params.memo != "" || params.guards.length > 0) {
             totalFee += calculateFee(outAmountGross, yodlFeeBps);
         }
 

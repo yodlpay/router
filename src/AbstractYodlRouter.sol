@@ -61,9 +61,13 @@ abstract contract AbstractYodlRouter {
      * @param yd The ID of the YD
      * @param payload The payload to be sent to the YApp
      */
-    struct YApp {
-        address yApp;
-        uint256 sessionId;
+    struct Guard {
+        address guardAddress;
+        bytes[] payload;
+    }
+
+    struct Webhook {
+        address webhookAddress;
         bytes[] payload;
     }
 

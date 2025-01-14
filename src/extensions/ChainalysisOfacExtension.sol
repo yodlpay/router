@@ -16,7 +16,7 @@ contract ChainalysisOfacExtension is IBeforeHook {
         chainalysisOracle = ChainalysisOracle(_chainalysisOracle);
     }
 
-    function beforeHook(address sender, address receiver, uint256, address, uint256, bytes[] calldata)
+    function beforeHook(address sender, address receiver, uint256, address, bytes[] calldata)
         external
         view
         override
