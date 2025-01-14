@@ -5,12 +5,14 @@ pragma solidity ^0.8.26;
 
 import "../routers/YodlTransferRouter.sol";
 import "../routers/YodlUniswapRouter.sol";
+import "../routers/YodlAcrossRouter.sol";
 import "../routers/YodlCurveRouter.sol";
 
-contract YodlRouter is YodlTransferRouter, YodlUniswapRouter, YodlCurveRouter {
+contract YodlRouter is YodlTransferRouter, YodlAcrossRouter, YodlUniswapRouter, YodlCurveRouter {
     constructor()
         AbstractYodlRouter()
         YodlTransferRouter()
+        YodlAcrossRouter(0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64)
         YodlUniswapRouter(0x2626664c2603336E57B271c5C0b26F421741e481)
         YodlCurveRouter(0x4f37A9d177470499A2dD084621020b023fcffc1F)
     {
