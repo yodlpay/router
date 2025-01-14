@@ -120,14 +120,6 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         }
 
         uint256 outAmountNet = outAmountGross - totalFee;
-        if (params.guards.length > 0) {
-            for (uint256 i = 0; i < params.guards.length; i++) {
-                IBeforeHook(params.guards[i].guardAddress).beforeHook(
-                    msg.sender, params.receiver, outAmountGross, params.token, params.guards[i].payload
-                );
-            }
-        }
-
         // Transfer to receiver
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token
@@ -137,6 +129,14 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
             (bool success,) = params.receiver.call{value: outAmountNet}("");
             require(success, "transfer of the native token to the recipient failed");
             emit YodlNativeTokenTransfer(msg.sender, params.receiver, outAmountNet);
+        }
+
+        if (params.guards.length > 0) {
+            for (uint256 i = 0; i < params.guards.length; i++) {
+                IBeforeHook(params.guards[i].guardAddress).beforeHook(
+                    msg.sender, params.receiver, outAmountGross, params.token, params.guards[i].payload
+                );
+            }
         }
 
         emit Yodl(msg.sender, params.receiver, params.token, outAmountGross, totalFee, params.memo);

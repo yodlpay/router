@@ -71,6 +71,9 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
         uint256 totalFee = 0;
         uint256 outAmountNet = outAmountGross - totalFee;
 
+        TransferHelper.safeTransferFrom(params.token, msg.sender, address(this), params.amount);
+        depositToAcross(outAmountGross, params);
+
         if (params.guards.length > 0) {
             for (uint256 i = 0; i < params.guards.length; i++) {
                 IBeforeHook(params.guards[i].guardAddress).beforeHook(
@@ -78,9 +81,6 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
                 );
             }
         }
-
-        TransferHelper.safeTransferFrom(params.token, msg.sender, address(this), params.amount);
-        depositToAcross(outAmountGross, params);
 
         emit Yodl(msg.sender, params.receiver, params.token, outAmountGross, totalFee, params.memo);
 
