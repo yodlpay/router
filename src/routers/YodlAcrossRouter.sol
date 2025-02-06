@@ -36,6 +36,7 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
         uint32 fillDeadline; // <--- from frontend
         uint32 exclusivityDeadline; // <--- from frontend
         bytes message; // <--- from frontend
+        uint256 relayerFee; // <-- Total Across fee. This helps us index properly.
     }
 
     V3SpokePoolInterface public acrossSpokePool;
@@ -61,6 +62,8 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
             }
         }
 
+        outAmountGross = outAmountGross + params.relayerFee;
+
         if (params.guards.length > 0) {
             for (uint256 i = 0; i < params.guards.length; i++) {
                 IBeforeHook(params.guards[i].guardAddress).beforeHook(
@@ -79,7 +82,7 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
         uint256 totalFee = 0;
         uint256 outAmountNet = outAmountGross - totalFee;
 
-        TransferHelper.safeTransferFrom(params.token, msg.sender, address(this), params.amount);
+        TransferHelper.safeTransferFrom(params.token, msg.sender, address(this), outAmountGross);
         depositToAcross(outAmountGross, params);
 
         emit Yodl(msg.sender, params.receiver, params.token, outAmountGross, totalFee, params.memo);
@@ -89,7 +92,7 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
 
     function depositToAcross(uint256 outAmountGross, YodlAcrossParams calldata params) internal {
         // Transfer to receiver
-        TransferHelper.safeApprove(params.token, address(acrossSpokePool), params.amount);
+        TransferHelper.safeApprove(params.token, address(acrossSpokePool), outAmountGross);
 
         // Across api provides exclusivityDeadline as number of seconds for a single relayer to fill the deposit, e.g. 10.
         // The SC, expects it to be a unix timestamp in seconds.
