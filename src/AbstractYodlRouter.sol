@@ -56,14 +56,22 @@ abstract contract AbstractYodlRouter {
     );
 
     /**
-     * @notice Struct to hold the YApp address and the YD ID
-     * @param yApp The address of the YApp
-     * @param yd The ID of the YD
-     * @param payload The payload to be sent to the YApp
+     * @notice Struct for payment guards to apply to the payment
+     * @param guard The address of the guard smart contract that can reject a payment by raising an exception
+     * @param payload The payload to be sent to the guard
      */
-    struct YApp {
-        address yApp;
-        uint256 sessionId;
+    struct Guard {
+        address guardAddress;
+        bytes[] payload;
+    }
+
+    /**
+     * @notice Struct for configuring additional webhooks to be called after the payment is executed. The webhooks have no effect for the onchain payment flow.
+     * @param webhookAddress An indexer will resolve the ENS of this address to determine webhook configuration
+     * @param payload Additional payload to be sent to the webhook handler
+     */
+    struct Webhook {
+        address webhookAddress;
         bytes[] payload;
     }
 

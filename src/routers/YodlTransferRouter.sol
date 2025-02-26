@@ -25,7 +25,9 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         // Metadata tracker for the payment
         uint256 yd;
         // List of YApps that are allowed to be called with IBeforeHook.beforeHook extension
-        YApp[] yAppList;
+        Guard[] guards;
+        // Array of webhook addresses and their associated calldata
+        Webhook[] webhooks;
     }
 
     /**
@@ -35,7 +37,7 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
      * yodlWithToken(
      *   "tx-123",         // memo
      *   5*10**18,         // 5$
-     *   [0x0, 0x0],  // no pricefeeds
+     *   [0x0, 0x0],       // no pricefeeds
      *   0xUSDC,           // usdc token address
      *   0xAlice           // receiver token address
      * )
@@ -88,6 +90,14 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
             }
         }
 
+        if (params.guards.length > 0) {
+            for (uint256 i = 0; i < params.guards.length; i++) {
+                IBeforeHook(params.guards[i].guardAddress).beforeHook(
+                    msg.sender, params.receiver, outAmountGross, params.token, params.guards[i].payload
+                );
+            }
+        }
+
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token
             require(
@@ -100,7 +110,7 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
 
         uint256 totalFee = 0;
 
-        if (params.memo != "" || params.yAppList.length > 0) {
+        if (params.memo != "" || params.guards.length > 0) {
             totalFee += calculateFee(outAmountGross, yodlFeeBps);
         }
 
@@ -118,19 +128,6 @@ abstract contract YodlTransferRouter is AbstractYodlRouter {
         }
 
         uint256 outAmountNet = outAmountGross - totalFee;
-        if (params.yAppList.length > 0) {
-            for (uint256 i = 0; i < params.yAppList.length; i++) {
-                IBeforeHook(params.yAppList[i].yApp).beforeHook(
-                    msg.sender,
-                    params.receiver,
-                    outAmountGross,
-                    params.token,
-                    params.yAppList[i].sessionId,
-                    params.yAppList[i].payload
-                );
-            }
-        }
-
         // Transfer to receiver
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token

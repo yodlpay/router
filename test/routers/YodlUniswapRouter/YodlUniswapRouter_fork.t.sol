@@ -71,7 +71,8 @@ contract YodlUniswapRouterForkTest is Test {
             extraFeeBps: 0,
             swapType: swapType,
             yd: 0,
-            yAppList: new YodlUniswapRouter.YApp[](0)
+            guards: new YodlUniswapRouter.Guard[](0),
+            webhooks: new YodlUniswapRouter.Webhook[](0)
         });
     }
 
@@ -79,7 +80,7 @@ contract YodlUniswapRouterForkTest is Test {
 
     function test_UniswapTransfer_Fork() public {
         YodlUniswapRouter.YodlUniswapParams memory params = createYodlUniswapParams(true);
-        uint256 feeUSDC = params.amountOut * baseFeeBps / 10000;
+        uint256 feeUSDC = (params.amountOut * baseFeeBps) / 10000;
         uint256 senderDAI = daiToken.balanceOf(SENDER);
         uint256 contractUSDC = usdcToken.balanceOf(address(harnessRouter));
 

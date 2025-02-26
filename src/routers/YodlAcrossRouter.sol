@@ -25,8 +25,9 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
         uint256 extraFeeBps;
         // Metadata tracker for the payment
         uint256 yd;
-        // List of YApps that are allowed to be called with IBeforeHook.beforeHook extension
-        YApp[] yAppList;
+        // List of guards and webhooks
+        Guard[] guards;
+        Webhook[] webhooks;
         address outputToken; // <--- from frontend
         uint256 outputAmount; // <--- from frontend
         uint256 destinationChainId; // <--- from frontend
@@ -60,6 +61,14 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
             }
         }
 
+        if (params.guards.length > 0) {
+            for (uint256 i = 0; i < params.guards.length; i++) {
+                IBeforeHook(params.guards[i].guardAddress).beforeHook(
+                    msg.sender, params.receiver, outAmountGross, params.token, params.guards[i].payload
+                );
+            }
+        }
+
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token
             require(
@@ -69,19 +78,6 @@ abstract contract YodlAcrossRouter is AbstractYodlRouter {
 
         uint256 totalFee = 0;
         uint256 outAmountNet = outAmountGross - totalFee;
-
-        if (params.yAppList.length > 0) {
-            for (uint256 i = 0; i < params.yAppList.length; i++) {
-                IBeforeHook(params.yAppList[i].yApp).beforeHook(
-                    msg.sender,
-                    params.receiver,
-                    outAmountGross,
-                    params.token,
-                    params.yAppList[i].sessionId,
-                    params.yAppList[i].payload
-                );
-            }
-        }
 
         TransferHelper.safeTransferFrom(params.token, msg.sender, address(this), params.amount);
         depositToAcross(outAmountGross, params);

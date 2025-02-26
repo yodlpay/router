@@ -99,15 +99,16 @@ contract YodlUniswapRouterTest is Test {
             extraFeeBps: 0,
             swapType: swapType,
             yd: 0,
-            yAppList: new YodlUniswapRouter.YApp[](0)
+            guards: new YodlUniswapRouter.Guard[](0),
+            webhooks: new YodlUniswapRouter.Webhook[](0)
         });
     }
 
     /* yodlWithUniswap tests   */
 
-    /* 
-    * Should revert with custom message if uniswap router is not set
-    */
+    /*
+     * Should revert with custom message if uniswap router is not set
+     */
     function test_yodlWithUniswap_NoUniswapRouter() public {
         harnessRouter.setUniswapRouter(address(0));
 
@@ -117,13 +118,13 @@ contract YodlUniswapRouterTest is Test {
         harnessRouter.yodlWithUniswap(singleParams);
     }
 
-    /* 
-    * Single hop with 1 Chainlink price feed, USDC to tokenA, with memo
-    * Tests sender balance and emissions
-    * TODO: convert to fuzz - parameterize amointIn, amountOut, memo (bool + if - defautmemo else - "") , feeBps etc. 
-    ** This requires update to createYodlUniswapParams or deleting it and creating the struct directly in test functions.
-    ** Also requires calls to exchangeRate and transferFee to get expected emit values.
-    */
+    /*
+     * Single hop with 1 Chainlink price feed, USDC to tokenA, with memo
+     * Tests sender balance and emissions
+     * TODO: convert to fuzz - parameterize amointIn, amountOut, memo (bool + if - defautmemo else - "") , feeBps etc.
+     ** This requires update to createYodlUniswapParams or deleting it and creating the struct directly in test functions.
+     ** Also requires calls to exchangeRate and transferFee to get expected emit values.
+     */
     function test_yodlWithUniswap_SingleHop() public {
         vm.mockCall(
             uniswapRouterAddress, abi.encodeWithSelector(IV3SwapRouter.exactOutputSingle.selector), abi.encode(amountIn)
@@ -132,10 +133,10 @@ contract YodlUniswapRouterTest is Test {
         uint256 senderBalanceBefore = tokenA.balanceOf(SENDER);
         YodlUniswapRouter.YodlUniswapParams memory yodlUniswapParams = createYodlUniswapParams(true);
 
-        /* 
-        * NB: The expected values are currently hardcoded based on yodlUniswapParams values.
-        * To make them dynamic, call exchangeRate (pricesExpected) transferFee (outAmountGrossExpected, totalFeeExpected)
-        */
+        /*
+         * NB: The expected values are currently hardcoded based on yodlUniswapParams values.
+         * To make them dynamic, call exchangeRate (pricesExpected) transferFee (outAmountGrossExpected, totalFeeExpected)
+         */
         int256[2] memory pricesExpected = [int256(106570000), int256(0)];
         uint256 outAmountGrossExpected = 95913000000000000000;
         uint256 totalFeeExpected = 191826000000000000;
@@ -160,11 +161,11 @@ contract YodlUniswapRouterTest is Test {
         // NB: To assert other balances we need to either mock the uniswap contract or run on forked mainnet
     }
 
-    /* 
-    * Multi hop with 1 Chainlink price feed, USDC to tokenA, with memo
-    * Tests sender balance and emissions
-    ** TODO: see test_yodlWithUniswap_SingleHop
-    */
+    /*
+     * Multi hop with 1 Chainlink price feed, USDC to tokenA, with memo
+     * Tests sender balance and emissions
+     ** TODO: see test_yodlWithUniswap_SingleHop
+     */
     function test_yodlWithUniswap_MultiHop() public {
         vm.mockCall(
             uniswapRouterAddress, abi.encodeWithSelector(IV3SwapRouter.exactOutput.selector), abi.encode(amountIn)
@@ -173,10 +174,10 @@ contract YodlUniswapRouterTest is Test {
         uint256 senderBalanceBefore = tokenA.balanceOf(SENDER);
         YodlUniswapRouter.YodlUniswapParams memory yodlUniswapParams = createYodlUniswapParams(false);
 
-        /* 
-        * NB: The expected values are currently hardcoded based on yodlUniswapParams values.
-        * To make them dynamic, call exchangeRate (pricesExpected) transferFee (outAmountGrossExpected, totalFeeExpected)
-        */
+        /*
+         * NB: The expected values are currently hardcoded based on yodlUniswapParams values.
+         * To make them dynamic, call exchangeRate (pricesExpected) transferFee (outAmountGrossExpected, totalFeeExpected)
+         */
         int256[2] memory pricesExpected = [int256(106570000), int256(0)];
         uint256 outAmountGrossExpected = 95913000000000000000;
         uint256 totalFeeExpected = 191826000000000000;
