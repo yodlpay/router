@@ -15,7 +15,6 @@ interface IBeforeHook {
      * @param receiver The address that receives the transfer.
      * @param tokenOutAmount The amount of tokens that are transferred.
      * @param tokenOutAddress The address of the token that is transferred.
-     * @param yd ID of the extension.
      * @param payload Any arbitrary payload attached to the transfer.
      * @return Any arbitrary uint256 value.
      */
@@ -24,7 +23,6 @@ interface IBeforeHook {
         address receiver,
         uint256 tokenOutAmount,
         address tokenOutAddress,
-        uint256 yd,
         bytes[] calldata payload
     ) external view returns (uint256);
 }

@@ -29,7 +29,9 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
         SwapType swapType;
         uint256 yd;
         // List of YApps that are allowed to be called with IBeforeHook.beforeHook extension
-        YApp[] yAppList;
+        Guard[] guards;
+        // Array of webhook addresses and their associated calldata
+        Webhook[] webhooks;
     }
 
     constructor(address _uniswapRouter) {
@@ -58,15 +60,10 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
             outAmountGross = params.amountOut;
         }
 
-        if (params.yAppList.length > 0) {
-            for (uint256 i = 0; i < params.yAppList.length; i++) {
-                IBeforeHook(params.yAppList[i].yApp).beforeHook(
-                    msg.sender,
-                    params.receiver,
-                    outAmountGross,
-                    tokenOut,
-                    params.yAppList[i].sessionId,
-                    params.yAppList[i].payload
+        if (params.guards.length > 0) {
+            for (uint256 i = 0; i < params.guards.length; i++) {
+                IBeforeHook(params.guards[i].guardAddress).beforeHook(
+                    msg.sender, params.receiver, outAmountGross, tokenOut, params.guards[i].payload
                 );
             }
         }
@@ -128,7 +125,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
 
         // Calculate fee from amount out
         uint256 totalFee = 0;
-        if (params.memo != "" || params.yAppList.length > 0) {
+        if (params.memo != "" || params.guards.length > 0) {
             totalFee += calculateFee(outAmountGross, yodlFeeBps);
         }
 
@@ -150,9 +147,9 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
             TransferHelper.safeTransfer(tokenOut, params.receiver, outAmountGross - totalFee);
         }
 
-        emit Yodl(params.sender, params.receiver, tokenOut, outAmountGross, totalFee, params.memo);
-
         TransferHelper.safeApprove(tokenIn, address(uniswapRouter), 0);
+
+        emit Yodl(params.sender, params.receiver, tokenOut, outAmountGross, totalFee, params.memo);
 
         return inAmount;
     }
