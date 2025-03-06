@@ -112,7 +112,7 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
             // Contrary to Uniswap on Curve we receive native token directly - no need to unwrap.
             uint256 nativeBalance = address(this).balance;
             require(nativeBalance >= outAmountGross, "Native balance is less than outAmountGross");
-
+            // transfer native tokens to receiver
             (bool success,) = params.receiver.call{value: outAmountGross - totalFee}("");
             require(success, "transfer of native to receiver failed");
             emit YodlNativeTokenTransfer(params.sender, params.receiver, outAmountGross - totalFee);
