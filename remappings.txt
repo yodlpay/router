@@ -1,5 +1,4 @@
 @chainlink/contracts/=lib/foundry-chainlink-toolkit/lib/chainlink-brownie-contracts/contracts/src/
-@openzeppelin/=lib/foundry-chainlink-toolkit/lib/openzeppelin-contracts/
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
 chainlink-brownie-contracts/=lib/foundry-chainlink-toolkit/lib/chainlink-brownie-contracts/contracts/src/v0.6/vendor/@arbitrum/nitro-contracts/src/
 chainlink/=lib/chainlink/contracts/
