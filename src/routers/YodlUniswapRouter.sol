@@ -132,7 +132,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
         // Handle extra fees
         if (params.extraFeeReceiver != address(0)) {
             // 50% maximum extra fee
-            require(params.extraFeeBps < MAX_EXTRA_FEE_BPS, "extraFeeBps too high");
+            require(params.extraFeeBps < MAX_EXTRA_FEE_BPS, "extraFeeBps too high!");
 
             totalFee +=
                 transferFee(outAmountGross, params.extraFeeBps, tokenOut, address(this), params.extraFeeReceiver);
