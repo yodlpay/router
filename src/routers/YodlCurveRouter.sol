@@ -6,8 +6,9 @@ pragma solidity ^0.8.26;
 import "../interfaces/ICurveRouterNG.sol";
 import "../AbstractYodlRouter.sol";
 import "../interfaces/IBeforeHook.sol";
+import "@openzeppelin/contracts//utils/ReentrancyGuard.sol";
 
-abstract contract YodlCurveRouter is AbstractYodlRouter {
+abstract contract YodlCurveRouter is AbstractYodlRouter, ReentrancyGuard {
     ICurveRouterNG public curveRouter;
 
     /// @notice Parameters for a payment through Curve
@@ -42,7 +43,7 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
     /// of slippage are in terms of the token out.
     /// @param params Struct that contains all the relevant parameters. See `YodlCurveParams` for more details.
     /// @return The amount received in terms of token out by the Curve swap
-    function yodlWithCurve(YodlCurveParams calldata params) external payable returns (uint256) {
+    function yodlWithCurve(YodlCurveParams calldata params) external payable nonReentrant returns (uint256) {
         require(address(curveRouter) != address(0), "curve router not present");
         (address tokenOut, address tokenIn) = decodeTokenOutTokenInCurve(params.route);
 
