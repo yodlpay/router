@@ -67,31 +67,41 @@ abstract contract YodlCurveRouter is AbstractYodlRouter {
             }
         }
 
-        // There should be no other situation in which we send a transaction with native token
-        if (msg.value != 0) {
-            // Wrap the native token
-            require(msg.value >= params.amountIn, "insufficient gas provided");
-            wrappedNativeToken.deposit{value: params.amountIn}();
+        bool isNativeTokenIn = tokenIn == NATIVE_TOKEN;
 
-            // Update the tokenIn to wrapped native token
-            // wrapped native token has the same number of decimals as native token
-            // wrapped native token is already the first token in the route parameter
-            tokenIn = address(wrappedNativeToken);
+        // Handle native token input
+        if (isNativeTokenIn) {
+            require(msg.value >= params.amountIn, "insufficient gas provided");
+            // We don't wrap the native token here anymore
         } else {
             // Transfer the ERC20 token from the sender to the YodlRouter
             TransferHelper.safeTransferFrom(tokenIn, msg.sender, address(this), params.amountIn);
+            TransferHelper.safeApprove(tokenIn, address(curveRouter), params.amountIn);
         }
-        TransferHelper.safeApprove(tokenIn, address(curveRouter), params.amountIn);
 
         // Make the swap - the YodlRouter will receive the tokens
-        uint256 amountOut = curveRouter.exchange(
-            params.route,
-            params.swapParams,
-            params.amountIn,
-            outAmountGross, // this will revert if we do not get at least this amount
-            params.pools, // this is for zap contracts
-            address(this) // the Yodl router will receive the tokens
-        );
+        uint256 amountOut;
+        if (isNativeTokenIn) {
+            // Call the Curve router with native ETH
+            amountOut = curveRouter.exchange{value: params.amountIn}(
+                params.route,
+                params.swapParams,
+                params.amountIn,
+                outAmountGross, // this will revert if we do not get at least this amount
+                params.pools, // this is for zap contracts
+                address(this) // the Yodl router will receive the tokens
+            );
+        } else {
+            // Call the Curve router with ERC20 tokens
+            amountOut = curveRouter.exchange(
+                params.route,
+                params.swapParams,
+                params.amountIn,
+                outAmountGross, // this will revert if we do not get at least this amount
+                params.pools, // this is for zap contracts
+                address(this) // the Yodl router will receive the tokens
+            );
+        }
         require(amountOut >= outAmountGross, "amountOut is less then outAmountGross");
 
         // Handle fees for the transaction - in terms out the token out
