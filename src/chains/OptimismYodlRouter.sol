@@ -18,7 +18,7 @@ contract YodlRouter is YodlTransferRouter, YodlAcrossRouter, YodlCurveRouter, Yo
     {
         version = "v0.7";
         yodlFeeBps = 20;
-        yodlFeeTreasury = 0x5f0947253a8218894af13438ac2e2E0CeD30d234;
+        yodlFeeTreasury = 0x57A48f1C8734dE572094CA7fDC0ba7e3919067Cf;
         wrappedNativeToken = IWETH9(0x4200000000000000000000000000000000000006);
     }
 }
