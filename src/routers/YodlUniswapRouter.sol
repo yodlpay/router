@@ -139,6 +139,7 @@ abstract contract YodlUniswapRouter is AbstractYodlRouter {
         }
 
         if (tokenOut == NATIVE_TOKEN) {
+            // transfer native tokens to receiver
             (bool success,) = params.receiver.call{value: outAmountGross - totalFee}("");
             require(success, "transfer failed");
             emit YodlNativeTokenTransfer(params.sender, params.receiver, outAmountGross - totalFee);
