@@ -10,8 +10,10 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
     struct YodlExternalFundingParams {
         // The message attached to the payment. If present, the router will take a fee.
         bytes32 memo;
-        // The amount to pay before any price feeds are applied. This amount will be converted by the price feeds and then the sender will pay the converted amount in the given token.
+        // The amountOut from dex swap. This is the amount to be tranfered to the receiver. Should include convenience fee when implemented.
         uint256 amount;
+        // The amount to pay before any price feeds are applied. This amount will be converted by the price feeds and then the sender will pay the converted amount in the given token.
+        uint256 invoiceAmount;
         // Array of Chainlink price feeds. See `exchangeRate` method for more details.
         PriceFeed[2] priceFeeds;
         // Token address to be used for the payment. Either an ERC20 token or the native token address.
@@ -87,7 +89,7 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
             {
                 int256[2] memory prices;
                 address[2] memory priceFeedsUsed;
-                (outAmountGross, priceFeedsUsed, prices) = exchangeRate(params.priceFeeds, params.amount);
+                (, priceFeedsUsed, prices) = exchangeRate(params.priceFeeds, params.invoiceAmount);
                 emitConversionEvent(params.priceFeeds, prices);
             }
         }
@@ -110,7 +112,8 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
             require(msg.value >= outAmountGross, "insufficient gas provided");
         }
 
-        uint256 totalFee = calculateFee(outAmountGross, params.convenienceFeeBps);
+        // uint256 totalFee = calculateFee(outAmountGross, params.convenienceFeeBps); // TODO: Implement convenience fee
+        uint256 totalFee;
 
         if (params.memo != "" || params.guards.length > 0) {
             totalFee += calculateFee(outAmountGross, yodlFeeBps);
