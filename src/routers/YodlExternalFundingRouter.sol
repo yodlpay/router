@@ -112,8 +112,7 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
             require(msg.value >= outAmountGross, "insufficient gas provided");
         }
 
-        // uint256 totalFee = calculateFee(outAmountGross, params.convenienceFeeBps); // TODO: Implement convenience fee
-        uint256 totalFee;
+        uint256 totalFee = calculateFee(outAmountGross, params.convenienceFeeBps);
 
         if (params.memo != "" || params.guards.length > 0) {
             totalFee += calculateFee(outAmountGross, yodlFeeBps);
