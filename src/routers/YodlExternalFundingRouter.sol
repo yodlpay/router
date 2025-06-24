@@ -102,14 +102,17 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
             }
         }
 
+        // Transfer full amount to router first
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token
             require(
                 IERC20(params.token).allowance(msg.sender, address(this)) >= outAmountGross, "insufficient allowance"
             );
+            TransferHelper.safeTransferFrom(params.token, msg.sender, address(this), outAmountGross);
         } else {
             // Native ether
             require(msg.value >= outAmountGross, "insufficient gas provided");
+            // Native tokens are already in the router from msg.value
         }
 
         uint256 totalFee = calculateFee(outAmountGross, params.convenienceFeeBps);
@@ -122,20 +125,15 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
             // 50% maximum extra fee
             require(params.extraFeeBps < MAX_EXTRA_FEE_BPS, "extraFeeBps too high");
 
-            totalFee += transferFee(
-                outAmountGross,
-                params.extraFeeBps,
-                params.token,
-                params.token == NATIVE_TOKEN ? address(this) : msg.sender,
-                params.extraFeeReceiver
-            );
+            totalFee +=
+                transferFee(outAmountGross, params.extraFeeBps, params.token, address(this), params.extraFeeReceiver);
         }
 
         uint256 outAmountNet = outAmountGross - totalFee;
         // Transfer to receiver
         if (params.token != NATIVE_TOKEN) {
             // ERC20 token
-            TransferHelper.safeTransferFrom(params.token, msg.sender, params.receiver, outAmountNet);
+            TransferHelper.safeTransfer(params.token, params.receiver, outAmountNet);
         } else {
             // Native ether
             (bool success,) = params.receiver.call{value: outAmountNet}("");
