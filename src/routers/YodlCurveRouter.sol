@@ -6,7 +6,7 @@ pragma solidity ^0.8.26;
 import "../interfaces/ICurveRouterNG.sol";
 import "../AbstractYodlRouter.sol";
 import "../interfaces/IBeforeHook.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "../../lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 
 abstract contract YodlCurveRouter is AbstractYodlRouter, ReentrancyGuard {
     ICurveRouterNG public curveRouter;
