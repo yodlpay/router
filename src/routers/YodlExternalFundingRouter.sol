@@ -10,9 +10,9 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
     struct YodlExternalFundingParams {
         // The message attached to the payment. If present, the router will take a fee.
         bytes32 memo;
-        // The amountOut from dex swap. This is the amount to be tranfered to the receiver. Should include convenience fee when implemented.
+        // The amount to be transfered to the router in terms of swapped tokenOut. This includes the convenience fee.
         uint256 amount;
-        // The amount to pay before any price feeds are applied. This amount will be converted by the price feeds and then the sender will pay the converted amount in the given token.
+        // The amount to pay in terms of invoice currency. Used only for emitting price feeds/exchange rates for indexing purposes.
         uint256 invoiceAmount;
         // Array of Chainlink price feeds. See `exchangeRate` method for more details.
         PriceFeed[2] priceFeeds;
