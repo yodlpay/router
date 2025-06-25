@@ -7,6 +7,8 @@ import "../AbstractYodlRouter.sol";
 import "../interfaces/IBeforeHook.sol";
 
 abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
+    uint256 public constant MAX_CONVENIENCE_FEE_BPS = 25; // 0.25%
+
     struct YodlExternalFundingParams {
         // The message attached to the payment. If present, the router will take a fee.
         bytes32 memo;
@@ -81,6 +83,7 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
      */
     function yodlWithExternal(YodlExternalFundingParams calldata params) external payable returns (uint256) {
         require(params.amount != 0, "invalid amount");
+        require(params.convenienceFeeBps <= MAX_CONVENIENCE_FEE_BPS, "convenience fee too high");
 
         uint256 outAmountGross = params.amount;
 
