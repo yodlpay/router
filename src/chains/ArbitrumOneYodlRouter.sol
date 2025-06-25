@@ -26,7 +26,7 @@ contract YodlRouter is
     {
         version = "v0.7";
         yodlFeeBps = 20;
-        yodlFeeTreasury = 0x5f0947253a8218894af13438ac2e2E0CeD30d234;
+        yodlFeeTreasury = 0x57A48f1C8734dE572094CA7fDC0ba7e3919067Cf;
         wrappedNativeToken = IWETH9(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
     }
 }
