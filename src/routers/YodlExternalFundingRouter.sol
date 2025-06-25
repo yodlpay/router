@@ -79,7 +79,7 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
      * @param params Struct that contains all the relevant parameters. See `YodlNativeParams` for more details.
      * @return Amount received by the receiver
      */
-    function yodlWithSwappedToken(YodlExternalFundingParams calldata params) external payable returns (uint256) {
+    function yodlWithExternal(YodlExternalFundingParams calldata params) external payable returns (uint256) {
         require(params.amount != 0, "invalid amount");
 
         uint256 outAmountGross = params.amount;
