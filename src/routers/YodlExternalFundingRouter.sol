@@ -12,9 +12,9 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
     struct YodlExternalFundingParams {
         // The message attached to the payment. If present, the router will take a fee.
         bytes32 memo;
-        // The amount to be transfered to the router in terms of swapped tokenOut. This includes the convenience fee.
-        uint256 amount;
-        // The amount to pay in terms of invoice currency. Used only for emitting price feeds/exchange rates for indexing purposes.
+        // The amount receiver will receive in terms of token. Does not include the convenience fee.
+        uint256 outAmountGross;
+        // The amount to pay in terms of invoice currency. Used only to emit price feeds/exchange rates for indexing purposes.
         uint256 invoiceAmount;
         // Array of Chainlink price feeds. See `exchangeRate` method for more details.
         PriceFeed[2] priceFeeds;
@@ -82,10 +82,10 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
      * @return Amount received by the receiver
      */
     function yodlWithExternal(YodlExternalFundingParams calldata params) external payable returns (uint256) {
-        require(params.amount != 0, "invalid amount");
+        require(params.outAmountGross != 0, "invalid amount");
         require(params.convenienceFeeBps <= MAX_CONVENIENCE_FEE_BPS, "convenience fee too high");
 
-        uint256 outAmountGross = params.amount;
+        uint256 inAmount = (params.outAmountGross * 10000) / (10000 - params.convenienceFeeBps);
 
         // Calculate exchange rate and emit for indexing purposes
         if (params.priceFeeds[0].feedType != NULL_FEED || params.priceFeeds[1].feedType != NULL_FEED) {
@@ -100,36 +100,35 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
         if (params.guards.length > 0) {
             for (uint256 i = 0; i < params.guards.length; i++) {
                 IBeforeHook(params.guards[i].guardAddress).beforeHook(
-                    msg.sender, params.receiver, outAmountGross, params.token, params.guards[i].payload
+                    msg.sender, params.receiver, params.outAmountGross, params.token, params.guards[i].payload
                 );
             }
         }
 
         // Transfer full amount to router first
         if (params.token != NATIVE_TOKEN) {
-            require(
-                IERC20(params.token).allowance(msg.sender, address(this)) >= outAmountGross, "insufficient allowance"
-            );
-            TransferHelper.safeTransferFrom(params.token, msg.sender, address(this), outAmountGross);
+            require(IERC20(params.token).allowance(msg.sender, address(this)) >= inAmount, "insufficient allowance");
+            TransferHelper.safeTransferFrom(params.token, msg.sender, address(this), inAmount);
         } else {
-            require(msg.value >= outAmountGross, "insufficient gas provided");
+            require(msg.value >= inAmount, "insufficient gas provided");
         }
 
-        uint256 totalFee = calculateFee(outAmountGross, params.convenienceFeeBps);
+        uint256 totalFee = 0;
 
         if (params.memo != "" || params.guards.length > 0) {
-            totalFee += calculateFee(outAmountGross, yodlFeeBps);
+            totalFee += calculateFee(params.outAmountGross, yodlFeeBps);
         }
 
         if (params.extraFeeReceiver != address(0)) {
             // 50% maximum extra fee
             require(params.extraFeeBps < MAX_EXTRA_FEE_BPS, "extraFeeBps too high");
 
-            totalFee +=
-                transferFee(outAmountGross, params.extraFeeBps, params.token, address(this), params.extraFeeReceiver);
+            totalFee += transferFee(
+                params.outAmountGross, params.extraFeeBps, params.token, address(this), params.extraFeeReceiver
+            );
         }
 
-        uint256 outAmountNet = outAmountGross - totalFee;
+        uint256 outAmountNet = params.outAmountGross - totalFee;
         // Transfer to receiver
         if (params.token != NATIVE_TOKEN) {
             TransferHelper.safeTransfer(params.token, params.receiver, outAmountNet);
@@ -139,7 +138,7 @@ abstract contract YodlExternalFundingRouter is AbstractYodlRouter {
             emit YodlNativeTokenTransfer(msg.sender, params.receiver, outAmountNet);
         }
 
-        emit Yodl(msg.sender, params.receiver, params.token, outAmountGross, totalFee, params.memo);
+        emit Yodl(msg.sender, params.receiver, params.token, params.outAmountGross, totalFee, params.memo);
 
         return outAmountNet;
     }
