@@ -23,5 +23,5 @@ forge create --rpc-url https://bsc-dataseed1.binance.org/ --verify --verifier-ur
 
 # NB:
 # AllDexesYodlRouter: Do not use in prod. Use to generate an abi with all functions in one. Deploy to any chain and get abi from explorer
-forge create --rpc-url https://mainnet.base.org --verify --verifier-url https://api.basescan.org/api --interactive --etherscan-api-key 3VKX8G4B2D6SXFCBFZJT6HSZ138JXQZ4IN --chain 8453 src/chains/AllDexesYodlRouter.sol:YodlRouter
+# forge create --rpc-url https://mainnet.base.org --verify --verifier-url https://api.basescan.org/api --interactive --etherscan-api-key 3VKX8G4B2D6SXFCBFZJT6HSZ138JXQZ4IN --chain 8453 src/chains/AllDexesYodlRouter.sol:YodlRouter
 
