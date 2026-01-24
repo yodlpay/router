@@ -20,3 +20,8 @@ forge create --rpc-url https://arb1.arbitrum.io/rpc --verify --verifier-url http
 ### Deploy to Binance Smart Chain and verify contract sources
 forge create --rpc-url https://bsc-dataseed1.binance.org/ --verify --verifier-url https://api.bscscan.com/api --interactive --etherscan-api-key BIEUE31QJY51WP25C3UHKYBSCYX61KHG5R --chain 56 src/chains/BscYodlRouter.sol:YodlRouter
 
+
+# NB:
+# AllDexesYodlRouter: Do not use in prod. Use to generate an abi with all functions in one. Deploy to any chain and get abi from explorer
+# forge create --rpc-url https://mainnet.base.org --verify --verifier-url https://api.basescan.org/api --interactive --etherscan-api-key 3VKX8G4B2D6SXFCBFZJT6HSZ138JXQZ4IN --chain 8453 src/chains/AllDexesYodlRouter.sol:YodlRouter
+
